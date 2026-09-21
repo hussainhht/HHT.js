@@ -8,13 +8,13 @@ Use this checklist as your step-by-step guide.
 
 ## Stage 1 — Understand the Project
 
-- [ ] Write down the 4 required framework features in your own words:
-  - [ ] DOM abstraction
-  - [ ] State management
-  - [ ] Event handling
-  - [ ] Routing
-- [ ] Write down what TodoMVC needs to do.
-- [ ] Decide on a name for your framework.
+- [X] Write down the 4 required framework features in your own words:
+  - [X] DOM abstraction
+  - [X] State management
+  - [X] Event handling
+  - [X] Routing
+- [X] Write down what TodoMVC needs to do.
+- [X] Decide on a name for your framework.
 - [ ] Decide what you want your framework syntax to look like.
 - [ ] Sketch how a user should create an element.
 - [ ] Sketch how a user should create an event.
@@ -584,3 +584,70 @@ Documentation
       ↓
 Cleanup + creativity
 ```
+
+
+
+
+## Add-on: AI Todo Generator
+
+> Add this feature only after finishing the core project requirements.
+
+* [ ] Add a `Generate with AI` button.
+* [ ] Add an input where the user can describe a goal or what they want to do.
+* [ ] Send the user input to an AI API.
+* [ ] Make the AI return a structured list of todos.
+* [ ] Convert the AI response into tasks inside the app.
+* [ ] Show the suggested tasks before adding them.
+* [ ] Let the user choose which tasks to add.
+* [ ] Add an `Add Selected` button.
+* [ ] Add an `Add All` button.
+* [ ] Save the added tasks in the app state.
+* [ ] Save the tasks in `localStorage`.
+
+### AI Task Data
+
+* [ ] Make the AI return a `title` for each task.
+* [ ] Support `priority`:
+
+  * [ ] Low
+  * [ ] Medium
+  * [ ] High
+* [ ] Support `category` or `project`.
+* [ ] Support a `due date` when requested.
+* [ ] Support `notes` when needed.
+
+### AI Settings
+
+* [ ] Add an `AI Settings` section or page.
+* [ ] Add a field for entering the API key.
+* [ ] Do not hardcode the API key in the source code.
+* [ ] Allow choosing an AI provider.
+* [ ] Allow choosing a model if needed.
+* [ ] Add a button to test the AI API connection.
+
+### Error Handling
+
+* [ ] Handle API errors.
+* [ ] Show an error if the API key is invalid.
+* [ ] Show a message if the free API limit is reached.
+* [ ] Handle invalid AI responses.
+* [ ] Prevent empty tasks from being added.
+* [ ] Avoid duplicate tasks when possible.
+
+### Future AI Features
+
+* [ ] `Plan my day` — turn daily goals into tasks.
+* [ ] `Break down task` — split a large task into smaller tasks.
+* [ ] `Suggest next tasks` — suggest the next useful steps.
+* [ ] `Prioritize tasks` — suggest task priorities.
+* [ ] `Create study plan` — turn a learning goal into a study plan.
+* [ ] `Create project plan` — turn a project idea into actionable tasks.
+* [ ] Let the AI understand how much time the user has available.
+* [ ] Let the AI suggest due dates or time blocks.
+* [ ] Export AI-generated tasks to `todo.md`.
+
+### Important
+
+* [ ] Finish the core TodoMVC and framework first.
+* [ ] Keep AI as a separate add-on.
+* [ ] Make sure the Todo app still works normally if the AI API is unavailable.
