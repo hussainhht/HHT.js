@@ -71,17 +71,17 @@ mini-framework/
 
 ## Stage 3 — Design Your Framework API
 
-- [ ] Decide how elements will be created.
-- [ ] Decide how attributes will be passed.
-- [ ] Decide how child elements will be passed.
-- [ ] Decide how text children will work.
-- [ ] Decide how events will be declared.
-- [ ] Decide how the application will be mounted.
-- [ ] Decide how state will be created.
-- [ ] Decide how state will be updated.
-- [ ] Decide how routes will be registered.
-- [ ] Write some fake example code showing what you want your framework to feel like.
-- [ ] Do not worry yet about how to implement everything internally.
+- [X] Decide how elements will be created.
+- [X] Decide how attributes will be passed.
+- [X] Decide how child elements will be passed.
+- [X] Decide how text children will work.
+- [X] Decide how events will be declared.
+- [X] Decide how the application will be mounted.
+- [X] Decide how state will be created.
+- [X] Decide how state will be updated.
+- [X] Decide how routes will be registered.
+- [X] Write some fake example code showing what you want your framework to feel like.
+- [X] Do not worry yet about how to implement everything internally.
 
 ---
 
