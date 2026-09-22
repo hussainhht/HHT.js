@@ -15,12 +15,12 @@ Use this checklist as your step-by-step guide.
   - [X] Routing
 - [X] Write down what TodoMVC needs to do.
 - [X] Decide on a name for your framework.
-- [ ] Decide what you want your framework syntax to look like.
-- [ ] Sketch how a user should create an element.
-- [ ] Sketch how a user should create an event.
-- [ ] Sketch how a user should update state.
-- [ ] Sketch how routing should look.
-- [ ] Make sure you understand this flow:
+- [X] Decide what you want your framework syntax to look like.
+- [X] Sketch how a user should create an element.
+- [X] Sketch how a user should create an event.
+- [X] Sketch how a user should update state.
+- [X] Sketch how routing should look.
+- [X] Make sure you understand this flow:
 
 ```text
 event → state change → render → DOM update
@@ -584,9 +584,6 @@ Documentation
       ↓
 Cleanup + creativity
 ```
-
-
-
 
 ## Add-on: AI Todo Generator
 
