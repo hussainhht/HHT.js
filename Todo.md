@@ -30,15 +30,15 @@ event → state change → render → DOM update
 
 ## Stage 2 — Create the Project Structure
 
-- [ ] Create the main project folder.
-- [ ] Create `index.html`.
-- [ ] Create `package.json` if you plan to use a development server.
-- [ ] Create a `framework/` folder.
-- [ ] Create a `todo/` folder.
-- [ ] Create a `docs/` folder.
-- [ ] Create `README.md`.
-- [ ] Make sure you can run the project from the root folder.
-- [ ] Open the project in the browser and confirm basic JavaScript works.
+- [X] Create the main project folder.
+- [X] Create `index.html`.
+- [X] Create `package.json` if you plan to use a development server.
+- [X] Create a `framework/` folder.
+- [X] Create a `todo/` folder.
+- [X] Create a `docs/` folder.
+- [X] Create `README.md`.
+- [X] Make sure you can run the project from the root folder.
+- [X] Open the project in the browser and confirm basic JavaScript works.
 
 Suggested structure:
 
