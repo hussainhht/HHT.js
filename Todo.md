@@ -87,25 +87,25 @@ mini-framework/
 
 ## Stage 4 — Build DOM Abstraction
 
-- [ ] Create a function that represents an HTML element as a JavaScript object.
-- [ ] Make it support a tag name.
-- [ ] Make it support attributes.
-- [ ] Make it support text.
-- [ ] Make it support child elements.
-- [ ] Make it support deeply nested elements.
-- [ ] Create a function that turns your JavaScript representation into a real DOM element.
-- [ ] Create a function that mounts it into the page.
-- [ ] Test a simple `div`.
-- [ ] Test attributes like:
-  - [ ] `class`
-  - [ ] `id`
-  - [ ] `placeholder`
-  - [ ] `type`
-- [ ] Test nested elements.
-- [ ] Test text nodes.
-- [ ] Test several sibling elements.
-- [ ] Make a tiny page using only your framework API.
-- [ ] Do not continue until you can create a page without manually using `document.createElement()` in your application code.
+- [X] Create a function that represents an HTML element as a JavaScript object.
+- [X] Make it support a tag name.
+- [X] Make it support attributes.
+- [X] Make it support text.
+- [X] Make it support child elements.
+- [X] Make it support deeply nested elements.
+- [X] Create a function that turns your JavaScript representation into a real DOM element.
+- [X] Create a function that mounts it into the page.
+- [X] Test a simple `div`.
+- [X] Test attributes like:
+  - [X] `class`
+  - [X] `id`
+  - [X] `placeholder`
+  - [X] `type`
+- [X] Test nested elements.
+- [X] Test text nodes.
+- [X] Test several sibling elements.
+- [X] Make a tiny page using only your framework API.
+- [X] Do not continue until you can create a page without manually using `document.createElement()` in your application code.
 
 ---
 
