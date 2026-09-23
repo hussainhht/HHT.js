@@ -13,3 +13,10 @@ export function decreaseCount() {
     count: current.count - 1,
   }));
 }
+
+export function resetCount() {
+  counterState.set((current) => ({
+    ...current,
+    count: 0,
+  }));
+}

@@ -1,4 +1,11 @@
-import { mount } from "../framework/dom.js";
+import { render } from "../framework/dom.js";
 import { createPage } from "./page.js";
+import { appState, counterState } from "./state.js";
 
-mount("#app", createPage());
+function renderApp() {
+  render("#app", createPage());
+}
+
+appState.subscribe(renderApp);
+counterState.subscribe(renderApp);
+renderApp();

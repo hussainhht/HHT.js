@@ -169,24 +169,24 @@ state.set(current => current + 1);
 
 ## Stage 7 — Connect State to Rendering
 
-- [ ] Make the application render from the current state.
-- [ ] Subscribe your renderer to state changes.
-- [ ] Change the state.
-- [ ] Confirm the page updates automatically.
-- [ ] Build a simple counter application.
-- [ ] Add a `+` button.
-- [ ] Add a `-` button.
-- [ ] Add a reset button.
-- [ ] Confirm events update state.
-- [ ] Confirm state causes rendering.
-- [ ] Confirm the visible DOM changes.
-- [ ] Verify this full cycle works:
+- [X] Make the application render from the current state.
+- [X] Subscribe your renderer to state changes.
+- [X] Change the state.
+- [X] Confirm the page updates automatically.
+- [X] Build a simple counter application.
+- [X] Add a `+` button.
+- [X] Add a `-` button.
+- [X] Add a reset button.
+- [X] Confirm events update state.
+- [X] Confirm state causes rendering.
+- [X] Confirm the visible DOM changes.
+- [X] Verify this full cycle works:
 
 ```text
 user action → event → state → render → DOM
 ```
 
-- [ ] Do not start TodoMVC until this works reliably.
+- [X] Do not start TodoMVC until this works reliably.
 
 ---
 

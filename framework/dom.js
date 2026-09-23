@@ -30,12 +30,20 @@ export function renderElement(node) {
   return element;
 }
 
-export function mount(target, node) {
+function getRoot(target) {
   const root = document.querySelector(target);
 
   if (!root) {
     throw new Error(`HHT.js: Mount target "${target}" was not found.`);
   }
 
-  root.appendChild(renderElement(node));
+  return root;
+}
+
+export function mount(target, node) {
+  getRoot(target).appendChild(renderElement(node));
+}
+
+export function render(target, node) {
+  getRoot(target).replaceChildren(renderElement(node));
 }
