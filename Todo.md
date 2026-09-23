@@ -192,14 +192,21 @@ user action → event → state → render → DOM
 
 ## Stage 8 — Improve Rendering
 
-- [ ] Decide whether you will completely rerender the app after state changes or create DOM diffing.
-- [ ] Start with complete rerendering if necessary.
-- [ ] Make sure rerendering does not break events.
-- [ ] Make sure input values behave correctly.
-- [ ] Make sure attributes update correctly.
-- [ ] If everything else is finished, consider creating a simple Virtual DOM diff.
-- [ ] Do not build a complex diffing system just because React has one.
-- [ ] Focus on correctness first.
+- [X] Decide whether you will completely rerender the app after state changes or create DOM diffing.
+
+
+
+<pre class="overflow-visible! px-0!" data-start="53" data-end="218"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="relative h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class=""><div class="relative"><div class=""><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0 PDq2pG_selectionAnchorContainer"><code><span>Decision: HHT.js will use complete rerendering first.</span></code><span aria-hidden="true" class="PDq2pG_selectionAnchor"></span></pre></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></div></div></div></pre>
+
+Current renderer: after starting with complete rerendering, HHT.js now uses a small index-based Virtual DOM diff.
+
+- [X] Start with complete rerendering if necessary.
+- [X] Make sure rerendering does not break events.
+- [X] Make sure input values behave correctly.
+- [X] Make sure attributes update correctly.
+- [X] If everything else is finished, consider creating a simple Virtual DOM diff.
+- [X] Do not build a complex diffing system just because React has one.
+- [X] Focus on correctness first.
 
 ---
 

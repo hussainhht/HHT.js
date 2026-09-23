@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
-import { createElement, mount, renderElement } from "../framework/dom.js";
+import { createElement, mount, render, renderElement } from "../framework/dom.js";
 
 const originalDocument = globalThis.document;
 
@@ -15,6 +15,18 @@ function useDocument() {
       this.childNodes.push(node);
       return node;
     },
+    replaceChildren(...nodes) {
+      this.childNodes = nodes;
+    },
+    replaceChild(next, previous) {
+      const index = this.childNodes.indexOf(previous);
+      this.childNodes[index] = next;
+      return previous;
+    },
+    removeChild(child) {
+      this.childNodes.splice(this.childNodes.indexOf(child), 1);
+      return child;
+    },
   };
 
   globalThis.document = {
@@ -22,6 +34,7 @@ function useDocument() {
       const element = new EventTarget();
       element.nodeType = 1;
       element.tagName = tagName.toUpperCase();
+      element.value = "";
       element.attributes = new Map();
       element.childNodes = [];
       element.setAttribute = function (name, value) {
@@ -29,6 +42,18 @@ function useDocument() {
       };
       element.getAttribute = function (name) {
         return this.attributes.get(name) ?? null;
+      };
+      element.removeAttribute = function (name) {
+        this.attributes.delete(name);
+      };
+      element.replaceChild = function (next, previous) {
+        const index = this.childNodes.indexOf(previous);
+        this.childNodes[index] = next;
+        return previous;
+      };
+      element.removeChild = function (child) {
+        this.childNodes.splice(this.childNodes.indexOf(child), 1);
+        return child;
       };
       element.appendChild = function (node) {
         this.childNodes.push(node);
@@ -178,4 +203,98 @@ test("handles multiple events on the same page", () => {
   button.dispatchEvent(new Event("click"));
 
   assert.deepEqual(received, ["input", "keydown", "click"]);
+});
+
+
+test("preserves input values when rendering a replacement tree", () => {
+  const root = useDocument();
+  const input = () => createElement("input", { id: "task-input" });
+
+  render("#app", createElement("form", {}, [input()]));
+  root.childNodes[0].childNodes[0].value = "Draft task";
+
+  render("#app", createElement("form", {}, [input()]));
+
+  assert.equal(root.childNodes[0].childNodes[0].value, "Draft task");
+});
+
+test("updates attributes when rendering a replacement tree", () => {
+  const root = useDocument();
+  const makeInput = (attrs) => createElement("input", {
+    id: "task-input",
+    ...attrs,
+  });
+
+  render("#app", makeInput({
+    class: "compact",
+    placeholder: "Short task",
+    type: "text",
+  }));
+  render("#app", makeInput({
+    class: "wide",
+    placeholder: "Describe the task",
+    type: "search",
+  }));
+
+  const input = root.childNodes[0];
+  assert.equal(input.getAttribute("class"), "wide");
+  assert.equal(input.getAttribute("placeholder"), "Describe the task");
+  assert.equal(input.getAttribute("type"), "search");
+});
+
+
+test("reuses matching nodes and patches text and attributes", () => {
+  const root = useDocument();
+
+  render("#app", createElement("section", { class: "old" }, [
+    createElement("p", {}, ["Before"]),
+  ]));
+  const section = root.childNodes[0];
+  const paragraph = section.childNodes[0];
+
+  render("#app", createElement("section", { class: "new" }, [
+    createElement("p", {}, ["After"]),
+  ]));
+
+  assert.equal(root.childNodes[0], section);
+  assert.equal(section.childNodes[0], paragraph);
+  assert.equal(section.getAttribute("class"), "new");
+  assert.equal(paragraph.childNodes[0].textContent, "After");
+});
+
+test("replaces changed child tags and removes stale attributes and children", () => {
+  const root = useDocument();
+
+  render("#app", createElement("div", { id: "old", title: "stale" }, [
+    createElement("strong", {}, ["Old"]),
+    createElement("span", {}, ["Remove me"]),
+  ]));
+
+  render("#app", createElement("div", { class: "current" }, [
+    createElement("em", {}, ["New"]),
+  ]));
+
+  const div = root.childNodes[0];
+  assert.equal(div.getAttribute("id"), null);
+  assert.equal(div.getAttribute("title"), null);
+  assert.equal(div.getAttribute("class"), "current");
+  assert.equal(div.childNodes.length, 1);
+  assert.equal(div.childNodes[0].tagName, "EM");
+  assert.equal(div.childNodes[0].childNodes[0].textContent, "New");
+});
+
+test("replaces an event handler without keeping the old handler", () => {
+  const root = useDocument();
+  let oldCalls = 0;
+  let newCalls = 0;
+  const button = (handler) => createElement("button", { onClick: handler }, ["Save"]);
+
+  render("#app", button(() => { oldCalls += 1; }));
+  const originalButton = root.childNodes[0];
+  render("#app", button(() => { newCalls += 1; }));
+
+  assert.equal(root.childNodes[0], originalButton);
+  root.childNodes[0].dispatchEvent(new Event("click"));
+  assert.equal(oldCalls, 0);
+  assert.equal(newCalls, 1);
 });

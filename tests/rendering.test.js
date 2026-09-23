@@ -6,11 +6,24 @@ function createDocument(root) {
   return {
     createElement(tagName) {
       const element = new EventTarget();
+      element.nodeType = 1;
       element.tagName = tagName.toUpperCase();
       element.childNodes = [];
       element.attributes = new Map();
       element.setAttribute = function (name, value) {
         this.attributes.set(name, String(value));
+      };
+      element.removeAttribute = function (name) {
+        this.attributes.delete(name);
+      };
+      element.removeChild = function (child) {
+        this.childNodes.splice(this.childNodes.indexOf(child), 1);
+        return child;
+      };
+      element.replaceChild = function (next, previous) {
+        const index = this.childNodes.indexOf(previous);
+        this.childNodes[index] = next;
+        return previous;
       };
       element.appendChild = function (child) {
         this.childNodes.push(child);
@@ -39,6 +52,18 @@ test("the mounted page rerenders automatically when state changes", async () => 
     replaceChildren(...nodes) {
       this.childNodes = nodes;
     },
+    get firstChild() {
+      return this.childNodes[0] ?? null;
+    },
+    removeChild(child) {
+      this.childNodes.splice(this.childNodes.indexOf(child), 1);
+      return child;
+    },
+    replaceChild(next, previous) {
+      const index = this.childNodes.indexOf(previous);
+      this.childNodes[index] = next;
+      return previous;
+    },
   };
   globalThis.document = createDocument(root);
 
@@ -49,7 +74,7 @@ test("the mounted page rerenders automatically when state changes", async () => 
 
     counterState.set({ count: 3 });
 
-    assert.notEqual(root.childNodes[0], firstRender);
+    assert.equal(root.childNodes[0], firstRender);
     assert.match(getTextContent(root.childNodes[0]), /Count: 3/);
 
     const buttons = () => root.childNodes[0].childNodes[2].childNodes;
