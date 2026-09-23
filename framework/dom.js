@@ -1,3 +1,5 @@
+import { isEvent, addEvent } from "./events.js";
+
 export function createElement(tag, attrs = {}, children = []) {
   return {
     tag,
@@ -14,7 +16,11 @@ export function renderElement(node) {
   const element = document.createElement(node.tag);
 
   for (const [name, value] of Object.entries(node.attrs)) {
-    element.setAttribute(name, value);
+    if (isEvent(name)) {
+      addEvent(element, name, value);
+    } else {
+      element.setAttribute(name, value);
+    }
   }
 
   for (const child of node.children) {

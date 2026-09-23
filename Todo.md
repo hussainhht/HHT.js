@@ -111,19 +111,19 @@ mini-framework/
 
 ## Stage 5 — Build Your Event System
 
-- [ ] Decide how your framework user declares a click event.
-- [ ] Add click support.
-- [ ] Add input support.
-- [ ] Add change support.
-- [ ] Add keydown support.
-- [ ] Make sure the framework user does not need to call `addEventListener()` directly.
-- [ ] Test a button click.
-- [ ] Test typing into an input.
-- [ ] Test pressing Enter.
-- [ ] Test more than one event on the page.
-- [ ] Decide whether to use direct listeners or event delegation.
-- [ ] If using event delegation, understand how the framework finds the correct handler.
-- [ ] Do not continue until your event API feels simple to use.
+- [X] Decide how your framework user declares a click event.
+- [X] Add click support.
+- [X] Add input support.
+- [X] Add change support.
+- [X] Add keydown support.
+- [X] Make sure the framework user does not need to call `addEventListener()` directly.
+- [X] Test a button click.
+- [X] Test typing into an input.
+- [X] Test pressing Enter.
+- [X] Test more than one event on the page.
+- [X] Decide whether to use direct listeners or event delegation.
+- [X] If using event delegation, understand how the framework finds the correct handler.
+- [X] Do not continue until your event API feels simple to use.
 
 ---
 

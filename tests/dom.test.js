@@ -19,22 +19,22 @@ function useDocument() {
 
   globalThis.document = {
     createElement(tagName) {
-      return {
-        nodeType: 1,
-        tagName: tagName.toUpperCase(),
-        attributes: new Map(),
-        childNodes: [],
-        setAttribute(name, value) {
-          this.attributes.set(name, String(value));
-        },
-        getAttribute(name) {
-          return this.attributes.get(name) ?? null;
-        },
-        appendChild(node) {
-          this.childNodes.push(node);
-          return node;
-        },
+      const element = new EventTarget();
+      element.nodeType = 1;
+      element.tagName = tagName.toUpperCase();
+      element.attributes = new Map();
+      element.childNodes = [];
+      element.setAttribute = function (name, value) {
+        this.attributes.set(name, String(value));
       };
+      element.getAttribute = function (name) {
+        return this.attributes.get(name) ?? null;
+      };
+      element.appendChild = function (node) {
+        this.childNodes.push(node);
+        return node;
+      };
+      return element;
     },
     createTextNode(value) {
       return { nodeType: 3, textContent: value };
@@ -110,4 +110,72 @@ test("renders several sibling elements in order", () => {
     element.childNodes.map((child) => child.childNodes[0].textContent),
     ["First", "Second", "Third"],
   );
+});
+
+test("handles a button click", () => {
+  useDocument();
+  let clicks = 0;
+  const button = renderElement(createElement("button", {
+    onClick: () => { clicks += 1; },
+  }, ["Add"]));
+
+  button.dispatchEvent(new Event("click"));
+
+  assert.equal(clicks, 1);
+  assert.equal(button.getAttribute("onClick"), null);
+});
+
+test("passes the current input value to an input handler", () => {
+  useDocument();
+  const values = [];
+  const input = renderElement(createElement("input", {
+    onInput: (event) => { values.push(event.target.value); },
+  }));
+
+  input.value = "t";
+  input.dispatchEvent(new Event("input"));
+  input.value = "task";
+  input.dispatchEvent(new Event("input"));
+
+  assert.deepEqual(values, ["t", "task"]);
+});
+
+test("handles Enter on keydown", () => {
+  useDocument();
+  let submissions = 0;
+  const input = renderElement(createElement("input", {
+    onKeyDown: (event) => {
+      if (event.key === "Enter") submissions += 1;
+    },
+  }));
+
+  const otherKey = new Event("keydown");
+  Object.defineProperty(otherKey, "key", { value: "a" });
+  input.dispatchEvent(otherKey);
+  const enter = new Event("keydown");
+  Object.defineProperty(enter, "key", { value: "Enter" });
+  input.dispatchEvent(enter);
+
+  assert.equal(submissions, 1);
+});
+
+test("handles multiple events on the same page", () => {
+  const root = useDocument();
+  const received = [];
+  mount("#app", createElement("main", {}, [
+    createElement("input", {
+      onInput: () => { received.push("input"); },
+      onKeyDown: () => { received.push("keydown"); },
+    }),
+    createElement("button", {
+      onClick: () => { received.push("click"); },
+    }, ["Save"]),
+  ]));
+
+  const [input, button] = root.childNodes[0].childNodes;
+  input.dispatchEvent(new Event("input"));
+  input.dispatchEvent(new Event("keydown"));
+  button.dispatchEvent(new Event("click"));
+
+  assert.deepEqual(received, ["input", "keydown", "click"]);
 });

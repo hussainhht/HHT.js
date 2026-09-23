@@ -4,7 +4,6 @@ Use a progressive API design:
 simple and readable syntax for beginners,
 with lower-level APIs for advanced users who need more control.
 
-
 ```
 mini-framework/
 │
@@ -29,3 +28,5 @@ mini-framework/
 └── docs/
     └── documentation.md
 ```
+
+HHT.js will use direct event listeners.
