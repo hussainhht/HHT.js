@@ -129,20 +129,41 @@ mini-framework/
 
 ## Stage 6 — Build State Management
 
-- [ ] Decide what a store looks like.
-- [ ] Create an initial state.
-- [ ] Create a way to read state.
-- [ ] Create a way to update state.
-- [ ] Create a way to subscribe to state changes.
-- [ ] Make state available to the whole application.
-- [ ] Decide whether state updates replace or merge values.
-- [ ] Decide whether updater functions are supported.
-- [ ] Test state without using the DOM first.
-- [ ] Create a counter state with `count: 0`.
-- [ ] Increase the count.
-- [ ] Decrease the count.
-- [ ] Confirm subscribers run when state changes.
-- [ ] Avoid directly modifying state from random places.
+- [X] Decide what a store looks like.
+- [X] Create an initial state.
+- [X] Create a way to read state.
+- [X] Create a way to update state.
+- [X] Create a way to subscribe to state changes.
+- [X] Make state available to the whole application.
+- [X] Decide whether state updates replace or merge values.
+- [X] Decide whether updater functions are supported.
+
+Yes. `set()` supports both direct values and updater functions.
+
+Examples:
+
+```js
+state.set(10);
+
+state.set(current => current + 1);
+```
+
+- [X] Test state without using the DOM first.
+- [X] Create a counter state with `count: 0`.
+- [X] Increase the count.
+- [X] Decrease the count.
+- [X] Confirm subscribers run when state changes.
+- [X] Avoid directly modifying state from random places.
+
+Yes. `set()` supports both direct values and updater functions.
+
+Examples:
+
+```js
+state.set(10);
+
+state.set(current => current + 1);
+```
 
 ---
 
