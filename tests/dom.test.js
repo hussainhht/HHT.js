@@ -35,6 +35,9 @@ function useDocument() {
       element.nodeType = 1;
       element.tagName = tagName.toUpperCase();
       element.value = "";
+      element.checked = false;
+      element.disabled = false;
+      element.selected = false;
       element.attributes = new Map();
       element.childNodes = [];
       element.setAttribute = function (name, value) {
@@ -297,4 +300,61 @@ test("replaces an event handler without keeping the old handler", () => {
   root.childNodes[0].dispatchEvent(new Event("click"));
   assert.equal(oldCalls, 0);
   assert.equal(newCalls, 1);
+});
+
+
+test("flattens nested child arrays and skips conditional empty children", () => {
+  const root = useDocument();
+  const list = (showSecond) => createElement("ul", {}, [
+    [createElement("li", {}, ["First"])],
+    showSecond && [createElement("li", {}, ["Second"])],
+    null,
+    undefined,
+  ]);
+
+  render("#app", list(true));
+  assert.deepEqual(root.childNodes[0].childNodes.map((item) => item.childNodes[0].textContent), ["First", "Second"]);
+
+  render("#app", list(false));
+  assert.deepEqual(root.childNodes[0].childNodes.map((item) => item.childNodes[0].textContent), ["First"]);
+});
+
+test("keeps input value and boolean properties in sync with attributes", () => {
+  const root = useDocument();
+  const input = (attrs) => createElement("input", { type: "checkbox", ...attrs });
+
+  render("#app", input({ checked: true, disabled: false, value: "Draft" }));
+  const element = root.childNodes[0];
+  assert.equal(element.checked, true);
+  assert.equal(element.disabled, false);
+  assert.equal(element.getAttribute("checked"), "");
+  assert.equal(element.getAttribute("disabled"), null);
+  assert.equal(element.value, "Draft");
+
+  element.checked = true;
+  render("#app", input({ checked: false, disabled: true, value: "Saved" }));
+  assert.equal(root.childNodes[0], element);
+  assert.equal(element.checked, false);
+  assert.equal(element.disabled, true);
+  assert.equal(element.getAttribute("checked"), null);
+  assert.equal(element.getAttribute("disabled"), "");
+  assert.equal(element.value, "Saved");
+
+  element.checked = true;
+  element.value = "Browser changed";
+  render("#app", input({ checked: false, disabled: true, value: "Saved" }));
+  assert.equal(element.checked, false);
+  assert.equal(element.value, "Saved");
+
+  render("#app", input({}));
+  assert.equal(element.disabled, false);
+  assert.equal(element.value, "");
+  assert.equal(element.getAttribute("disabled"), null);
+  assert.equal(element.getAttribute("value"), null);
+
+  render("#app", input({ value: null }));
+  element.value = "Browser changed";
+  render("#app", input({ value: null }));
+  assert.equal(element.value, "");
+  assert.equal(element.getAttribute("value"), null);
 });

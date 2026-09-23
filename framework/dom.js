@@ -1,12 +1,40 @@
 import { isEvent, addEvent } from "./events.js";
 
 const mountedTrees = new WeakMap();
+const booleanAttributes = new Set(["checked", "disabled", "selected"]);
+
+function normalizeChildren(children) {
+  const list = Array.isArray(children) ? children : [children];
+  return list.flat(Infinity).filter((child) => child != null && typeof child !== "boolean");
+}
+
+function removeDomAttribute(element, name) {
+  if (booleanAttributes.has(name) && name in element) element[name] = false;
+  if (name === "value" && "value" in element) element.value = "";
+  element.removeAttribute(name);
+}
+
+function setDomAttribute(element, name, value) {
+  if (value == null) {
+    removeDomAttribute(element, name);
+  } else if (booleanAttributes.has(name)) {
+    const enabled = Boolean(value);
+    if (name in element) element[name] = enabled;
+    if (enabled) element.setAttribute(name, "");
+    else element.removeAttribute(name);
+  } else if (name === "value" && "value" in element) {
+    element.value = String(value);
+    element.setAttribute(name, value);
+  } else {
+    element.setAttribute(name, value);
+  }
+}
 
 export function createElement(tag, attrs = {}, children = []) {
   return {
     tag,
     attrs,
-    children,
+    children: normalizeChildren(children),
   };
 }
 
@@ -21,7 +49,7 @@ export function renderElement(node) {
     if (isEvent(name)) {
       addEvent(element, name, value);
     } else {
-      element.setAttribute(name, value);
+      setDomAttribute(element, name, value);
     }
   }
 
@@ -55,24 +83,28 @@ function updateAttributes(element, previous = {}, next = {}) {
     if (isEvent(name)) {
       element.removeEventListener(name.slice(2).toLowerCase(), value);
     } else {
-      element.removeAttribute(name);
+      removeDomAttribute(element, name);
     }
   }
 
   for (const [name, value] of Object.entries(next)) {
     const oldValue = previous[name];
-    if (oldValue === value) continue;
+    if (oldValue === value) {
+      if (name === "value" && "value" in element && element.value !== (value == null ? "" : String(value))) {
+        element.value = value == null ? "" : String(value);
+      } else if (booleanAttributes.has(name) && name in element && element[name] !== Boolean(value)) {
+        element[name] = Boolean(value);
+      }
+      continue;
+    }
 
     if (isEvent(name)) {
       if (oldValue) {
         element.removeEventListener(name.slice(2).toLowerCase(), oldValue);
       }
       addEvent(element, name, value);
-    } else if (name === "value" && "value" in element) {
-      element.value = String(value);
-      element.setAttribute(name, value);
     } else {
-      element.setAttribute(name, value);
+      setDomAttribute(element, name, value);
     }
   }
 }

@@ -29,7 +29,11 @@ export function createRouter() {
   }
 
   function register(path) {
-    routes.add(normalizePath(path));
+    const normalized = normalizePath(path);
+    if (!routes.has(normalized)) {
+      routes.add(normalized);
+      if (started && pathFromHash() === normalized) syncFromHash();
+    }
     return router;
   }
 

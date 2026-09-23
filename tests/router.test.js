@@ -51,6 +51,12 @@ test("unknown hash routes show the built-in 404 view without redirecting", () =>
     refreshedRouter.start();
     assert.equal(refreshedRouter.getCurrentRoute(), "/direct-change");
     assert.deepEqual(refreshedRouter.getCurrentView((path) => ({ path })), notFound("/direct-change"));
+
+    let routeUpdates = 0;
+    refreshedRouter.subscribe(() => { routeUpdates += 1; });
+    refreshedRouter.register("/direct-change");
+    assert.equal(routeUpdates, 1);
+    assert.deepEqual(refreshedRouter.getCurrentView((path) => ({ path })), { path: "/direct-change" });
   } finally {
     globalThis.window = originalWindow;
   }

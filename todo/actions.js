@@ -1,4 +1,4 @@
-import { counterState } from "./state.js";
+import { appState, counterState } from "./state.js";
 
 export function increaseCount() {
   counterState.set((current) => ({
@@ -18,5 +18,12 @@ export function resetCount() {
   counterState.set((current) => ({
     ...current,
     count: 0,
+  }));
+}
+
+export function setMessage(message) {
+  appState.set((current) => ({
+    ...current,
+    message,
   }));
 }

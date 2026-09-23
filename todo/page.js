@@ -1,5 +1,5 @@
 import { createElement } from "../framework/dom.js";
-import { increaseCount, decreaseCount, resetCount } from "./actions.js";
+import { increaseCount, decreaseCount, resetCount, setMessage } from "./actions.js";
 import { routePaths } from "./routes.js";
 import { appState, counterState } from "./state.js";
 
@@ -18,6 +18,19 @@ export function createPage(route = routePaths.home) {
       createElement("button", { onClick: decreaseCount }, ["-"]),
       createElement("button", { onClick: increaseCount }, ["+"]),
       createElement("button", { onClick: resetCount }, ["Reset"]),
+    ]),
+    createElement("section", { class: "live-message" }, [
+      createElement("label", { for: "message-input" }, ["Message"]),
+      createElement("input", {
+        id: "message-input",
+        type: "text",
+        placeholder: "Type a message",
+        value: appState.get().message,
+        onInput: (event) => setMessage(event.target.value),
+      }),
+      createElement("p", { id: "message-preview" }, [
+        appState.get().message ? `You typed: ${appState.get().message}` : "Type to see the message",
+      ]),
     ]),
     createElement("nav", { "aria-label": "Main navigation" }, [
       createElement("a", { href: `#${routePaths.home}` }, ["Home"]),

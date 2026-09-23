@@ -242,15 +242,15 @@ Routes:
 
 ## Stage 10 — Make a Small Framework Test App
 
-- [ ] Do not use TodoMVC yet.
-- [ ] Create a small app using only your framework.
-- [ ] Include nested elements.
-- [ ] Include attributes.
-- [ ] Include at least two event types.
-- [ ] Include shared state.
-- [ ] Include at least two routes.
-- [ ] Confirm all four framework requirements work together.
-- [ ] Fix framework problems now instead of while building TodoMVC.
+- [X] Do not use TodoMVC yet.
+- [X] Create a small app using only your framework.
+- [X] Include nested elements.
+- [X] Include attributes.
+- [X] Include at least two event types.
+- [X] Include shared state.
+- [X] Include at least two routes.
+- [X] Confirm all four framework requirements work together.
+- [X] Fix framework problems now instead of while building TodoMVC.
 
 ---
 

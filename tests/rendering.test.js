@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { counterState } from "../todo/state.js";
+import { appState, counterState } from "../todo/state.js";
 
 function createDocument(root) {
   return {
@@ -8,6 +8,7 @@ function createDocument(root) {
       const element = new EventTarget();
       element.nodeType = 1;
       element.tagName = tagName.toUpperCase();
+      element.value = "";
       element.childNodes = [];
       element.attributes = new Map();
       element.setAttribute = function (name, value) {
@@ -106,8 +107,23 @@ test("the mounted page rerenders automatically when state changes", async () => 
     assert.equal(counterState.get().count, 0);
     assert.match(getTextContent(root.childNodes[0]), /Count: 0/);
 
+    const messageSection = root.childNodes[0].childNodes[3];
+    const messageInput = messageSection.childNodes[1];
+    assert.equal(messageSection.tagName, "SECTION");
+    assert.equal(messageInput.attributes.get("type"), "text");
+    assert.equal(messageInput.attributes.get("placeholder"), "Type a message");
+    messageInput.value = "Working together";
+    messageInput.dispatchEvent(new Event("input"));
+    assert.equal(appState.get().message, "Working together");
+    assert.equal(root.childNodes[0].childNodes[3].childNodes[1], messageInput);
+    assert.match(getTextContent(root.childNodes[0]), /You typed: Working together/);
+
+    buttons()[1].dispatchEvent(new Event("click"));
+    assert.equal(counterState.get().count, 1);
     changeHash("#/active");
     assert.match(getTextContent(root.childNodes[0]), /Active items/);
+    assert.match(getTextContent(root.childNodes[0]), /Count: 1/);
+    assert.equal(root.childNodes[0].childNodes[3].childNodes[1].value, "Working together");
     changeHash("#/unknown");
     assert.match(getTextContent(root.childNodes[0]), /404 Not Found/);
   } finally {
