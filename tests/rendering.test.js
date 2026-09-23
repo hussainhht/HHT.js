@@ -47,6 +47,7 @@ function getTextContent(node) {
 
 test("the mounted page rerenders automatically when state changes", async () => {
   const originalDocument = globalThis.document;
+  const originalWindow = globalThis.window;
   const root = {
     childNodes: [],
     replaceChildren(...nodes) {
@@ -66,9 +67,24 @@ test("the mounted page rerenders automatically when state changes", async () => 
     },
   };
   globalThis.document = createDocument(root);
+  const hashListeners = [];
+  globalThis.window = {
+    location: { hash: "#/missing" },
+    addEventListener(type, listener) {
+      if (type === "hashchange") hashListeners.push(listener);
+    },
+  };
+  const changeHash = (hash) => {
+    window.location.hash = hash;
+    for (const listener of hashListeners) listener();
+  };
 
   try {
     await import("../todo/app.js");
+    assert.match(getTextContent(root.childNodes[0]), /404 Not Found/);
+    assert.equal(window.location.hash, "#/missing");
+
+    changeHash("#/");
     const firstRender = root.childNodes[0];
     assert.match(getTextContent(firstRender), /Count: 0/);
 
@@ -89,7 +105,13 @@ test("the mounted page rerenders automatically when state changes", async () => 
     buttons()[2].dispatchEvent(new Event("click"));
     assert.equal(counterState.get().count, 0);
     assert.match(getTextContent(root.childNodes[0]), /Count: 0/);
+
+    changeHash("#/active");
+    assert.match(getTextContent(root.childNodes[0]), /Active items/);
+    changeHash("#/unknown");
+    assert.match(getTextContent(root.childNodes[0]), /404 Not Found/);
   } finally {
     globalThis.document = originalDocument;
+    globalThis.window = originalWindow;
   }
 });

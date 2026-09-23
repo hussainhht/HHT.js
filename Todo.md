@@ -194,8 +194,6 @@ user action → event → state → render → DOM
 
 - [X] Decide whether you will completely rerender the app after state changes or create DOM diffing.
 
-
-
 <pre class="overflow-visible! px-0!" data-start="53" data-end="218"><div class="relative w-full mt-4 mb-1"><div class=""><div class="contents"><div class="border border-token-border-light border-radius-3xl corner-superellipse/1.1 rounded-3xl"><div class="relative h-full w-full border-radius-3xl bg-(--code-block-surface) corner-superellipse/1.1 overflow-clip rounded-3xl [--code-block-surface:var(--bg-elevated-secondary)] dark:[--code-block-surface:var(--composer-surface-primary)] lxnfua_clipPathFallback"><div class="relative"><div class="h-full min-h-0 min-w-0"><div class="h-full min-h-0 min-w-0"><div class=""><div class="relative"><div class=""><div class="relative z-0 flex max-w-full"><div id="code-block-viewer" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼs ͼ16"><div class="cm-scroller"><pre class="cm-content q9tKkq_readonly m-0 PDq2pG_selectionAnchorContainer"><code><span>Decision: HHT.js will use complete rerendering first.</span></code><span aria-hidden="true" class="PDq2pG_selectionAnchor"></span></pre></div></div></div></div></div></div></div></div><div class=""><div class=""></div></div></div></div></div></div></div></div></pre>
 
 Current renderer: after starting with complete rerendering, HHT.js now uses a small index-based Virtual DOM diff.
@@ -212,22 +210,33 @@ Current renderer: after starting with complete rerendering, HHT.js now uses a sm
 
 ## Stage 9 — Build Routing
 
-- [ ] Decide whether you will use hash routing.
-- [ ] Start with routes such as:
-  - [ ] `/`
-  - [ ] `/active`
-  - [ ] `/completed`
-- [ ] Create a router object or function.
-- [ ] Create a way to register routes.
-- [ ] Create a way to navigate.
-- [ ] Detect URL changes.
-- [ ] Get the current route.
-- [ ] Connect the current route to application state.
-- [ ] Test manually changing the URL.
-- [ ] Test clicking a navigation link.
-- [ ] Confirm changing the route changes what is rendered.
-- [ ] Confirm refreshing the page keeps the correct route.
-- [ ] Confirm browser back/forward navigation works if your routing design supports it.
+- [X] Decide whether you will use hash routing.
+
+
+
+Decision: HHT.js will use hash-based routing.
+
+Routes:
+
+- `#/`
+- `#/active`
+- `#/completed`
+
+- [X] Start with routes such as:
+  - [X] `/`
+  - [X] `/active`
+  - [X] `/completed`
+- [X] Create a router object or function.
+- [X] Create a way to register routes.
+- [X] Create a way to navigate.
+- [X] Detect URL changes.
+- [X] Get the current route.
+- [X] Connect the current route to application state.
+- [X] Test manually changing the URL.
+- [X] Test clicking a navigation link.
+- [X] Confirm changing the route changes what is rendered.
+- [X] Confirm refreshing the page keeps the correct route.
+- [X] Confirm browser back/forward navigation works if your routing design supports it.
 
 ---
 
