@@ -156,6 +156,18 @@ export function createInfoFooter() {
   ]);
 }
 
+// Picks which todos to show for a route. This only filters what is rendered;
+// state always keeps every todo, so switching filters never loses any.
+function filterTodos(todos, route) {
+  if (route === routePaths.active) {
+    return todos.filter((todo) => !todo.completed);
+  }
+  if (route === routePaths.completed) {
+    return todos.filter((todo) => todo.completed);
+  }
+  return todos;
+}
+
 // Full TodoMVC page. `render` mounts a single root, so the app and the info
 // footer are wrapped in a plain div.
 export function createTodoPage(route = routePaths.home) {
@@ -167,7 +179,9 @@ export function createTodoPage(route = routePaths.home) {
     createTodoApp([
       createHeader(),
       createMainSection([
-        createTodoList(todos.map((todo) => createTodoItem(todo))),
+        createTodoList(
+          filterTodos(todos, route).map((todo) => createTodoItem(todo)),
+        ),
       ]),
       createFooter([
         createTodoCount(activeCount),

@@ -343,25 +343,25 @@ Routes:
 
 ## Stage 17 — Remaining Count
 
-- [ ] Calculate active todos.
-- [ ] Display the correct count.
-- [ ] Use correct singular/plural text if required.
-- [ ] Verify the number changes when adding.
-- [ ] Verify it changes when completing.
-- [ ] Verify it changes when deleting.
+- [X] Calculate active todos.
+- [X] Display the correct count.
+- [X] Use correct singular/plural text if required.
+- [X] Verify the number changes when adding.
+- [X] Verify it changes when completing.
+- [X] Verify it changes when deleting.
 
 ---
 
 ## Stage 18 — Filters and Routing
 
-- [ ] Connect All to the `/` route.
-- [ ] Connect Active to `/active`.
-- [ ] Connect Completed to `/completed`.
-- [ ] Filter the visible todos based on the route.
-- [ ] Do not delete hidden todos from state.
-- [ ] Add the selected class to the current filter.
-- [ ] Test browser refresh on every route.
-- [ ] Test navigating between all three filters.
+- [X] Connect All to the `/` route.
+- [X] Connect Active to `/active`.
+- [X] Connect Completed to `/completed`.
+- [X] Filter the visible todos based on the route.
+- [X] Do not delete hidden todos from state.
+- [X] Add the selected class to the current filter.
+- [X] Test browser refresh on every route.
+- [X] Test navigating between all three filters.
 
 ---
 
