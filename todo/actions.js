@@ -98,3 +98,30 @@ export function toggleAll() {
     };
   });
 }
+
+// Edit mode: `editingId` names the one todo being edited (null for none).
+export function startEditing(id) {
+  todoState.set((current) => ({ ...current, editingId: id }));
+}
+
+// Leaves edit mode without saving; the todo keeps its old text.
+export function cancelEditing() {
+  todoState.set((current) => ({ ...current, editingId: null }));
+}
+
+// Saves an edit and leaves edit mode. The text is trimmed, and a todo edited
+// down to nothing is deleted, as TodoMVC requires.
+export function saveEdit(id, text) {
+  const trimmed = text.trim();
+  if (trimmed === "") {
+    deleteTodo(id);
+    return;
+  }
+  todoState.set((current) => ({
+    ...current,
+    todos: current.todos.map((todo) =>
+      todo.id === id ? { ...todo, text: trimmed } : todo,
+    ),
+    editingId: null,
+  }));
+}

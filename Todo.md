@@ -387,15 +387,15 @@ Routes:
 
 ## Stage 21 — Editing Todos
 
-- [ ] Detect the required action for entering edit mode, usually double-click.
-- [ ] Show an edit input.
-- [ ] Fill it with the current todo title.
-- [ ] Save when Enter is pressed.
-- [ ] Handle blur if TodoMVC requires it.
-- [ ] Handle Escape if required.
-- [ ] Remove the todo if the edited text becomes empty if that matches TodoMVC behavior.
-- [ ] Exit edit mode correctly.
-- [ ] Test editing several different todos.
+- [X] Detect the required action for entering edit mode, usually double-click.
+- [X] Show an edit input.
+- [X] Fill it with the current todo title.
+- [X] Save when Enter is pressed.
+- [X] Handle blur if TodoMVC requires it.
+- [X] Handle Escape if required.
+- [X] Remove the todo if the edited text becomes empty if that matches TodoMVC behavior.
+- [X] Exit edit mode correctly.
+- [X] Test editing several different todos.
 
 ---
 

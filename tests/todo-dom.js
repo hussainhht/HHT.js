@@ -2,8 +2,20 @@
 // Elements are EventTargets, so tests can dispatch the same events a browser
 // would and inspect the patched tree afterwards.
 
+// Supports the two selector forms the app uses: a tag name ("li") or a single
+// class (".edit").
+function matches(element, selector) {
+  if (element?.nodeType !== 1) return false;
+  if (selector.startsWith(".")) {
+    const classes = (element.attributes.get("class") ?? "").split(" ");
+    return classes.includes(selector.slice(1));
+  }
+  return element.tagName === selector.toUpperCase();
+}
+
 function createDocument(root) {
-  return {
+  const document = {
+    activeElement: null,
     createElement(tagName) {
       const element = new EventTarget();
       element.nodeType = 1;
@@ -27,11 +39,35 @@ function createDocument(root) {
       element.replaceChild = function (next, previous) {
         const index = this.childNodes.indexOf(previous);
         this.childNodes[index] = next;
+        next.parentNode = this;
         return previous;
       };
       element.appendChild = function (child) {
         this.childNodes.push(child);
+        child.parentNode = this;
         return child;
+      };
+      element.closest = function (selector) {
+        let node = this;
+        while (node && !matches(node, selector)) node = node.parentNode;
+        return node ?? null;
+      };
+      element.querySelector = function (selector) {
+        for (const child of this.childNodes) {
+          if (matches(child, selector)) return child;
+          const found = child.nodeType === 1 && child.querySelector(selector);
+          if (found) return found;
+        }
+        return null;
+      };
+      element.focus = function () {
+        document.activeElement = this;
+      };
+      // Like a browser, blur() on the focused element fires a "blur" event.
+      element.blur = function () {
+        if (document.activeElement !== this) return;
+        document.activeElement = null;
+        this.dispatchEvent(new Event("blur"));
       };
       return element;
     },
@@ -42,6 +78,7 @@ function createDocument(root) {
       return selector === "#app" ? root : null;
     },
   };
+  return document;
 }
 
 export function getTextContent(node) {

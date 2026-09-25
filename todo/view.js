@@ -1,9 +1,12 @@
 import { createElement } from "../framework/dom.js";
 import {
   addTodo,
+  cancelEditing,
   clearCompleted,
   createTodo,
   deleteTodo,
+  saveEdit,
+  startEditing,
   toggleAll,
   toggleTodo,
 } from "./actions.js";
@@ -84,8 +87,35 @@ export function createTodoList(items = []) {
   return createElement("ul", { class: "todo-list" }, items);
 }
 
+// Double-click on the label starts editing. Rendering is synchronous, so once
+// startEditing returns the row already has `.editing`, the edit input is
+// visible, and it can take focus.
+function handleLabelDblclick(event, id) {
+  startEditing(id);
+  event.target.closest("li").querySelector(".edit").focus();
+}
+
+// Enter saves, Escape cancels. `isComposing` is skipped for the same reason
+// as in the new-todo input. Browsers keep focus on an input that gets hidden,
+// so it is blurred by hand; otherwise typing would go into the hidden input.
+function handleEditKeydown(event, id) {
+  if (event.isComposing) return;
+  if (event.key === "Enter") saveEdit(id, event.target.value);
+  else if (event.key === "Escape") cancelEditing();
+  else return;
+  event.target.blur();
+}
+
+// Clicking away saves too. After Enter or Escape the todo is no longer being
+// edited, so a blur that follows must not save again (after Escape that would
+// save the text that was just discarded).
+function handleEditBlur(event, id) {
+  if (todoState.get().editingId !== id) return;
+  saveEdit(id, event.target.value);
+}
+
 // One todo row, following TodoMVC markup: a `.view` with checkbox, label and
-// delete button, plus a hidden `.edit` input used later for editing.
+// delete button, plus a hidden `.edit` input used for editing.
 // `completed` class drives the strikethrough styling; `editing` swaps the
 // `.view` for the `.edit` input.
 export function createTodoItem(todo, isEditing = false) {
@@ -100,13 +130,24 @@ export function createTodoItem(todo, isEditing = false) {
         checked: todo.completed,
         onChange: () => toggleTodo(todo.id),
       }),
-      createElement("label", {}, [todo.text]),
+      createElement(
+        "label",
+        { onDblclick: (event) => handleLabelDblclick(event, todo.id) },
+        [todo.text],
+      ),
       createElement("button", {
         class: "destroy",
         onClick: () => deleteTodo(todo.id),
       }),
     ]),
-    createElement("input", { class: "edit", value: todo.text }),
+    // Starts from the current title each time editing begins; an edit that
+    // was cancelled is reset because the render syncs `value` back.
+    createElement("input", {
+      class: "edit",
+      value: todo.text,
+      onKeydown: (event) => handleEditKeydown(event, todo.id),
+      onBlur: (event) => handleEditBlur(event, todo.id),
+    }),
   ]);
 }
 
@@ -186,7 +227,7 @@ function filterTodos(todos, route) {
 // Full TodoMVC page. `render` mounts a single root, so the app and the info
 // footer are wrapped in a plain div.
 export function createTodoPage(route = routePaths.home) {
-  const { todos } = todoState.get();
+  const { todos, editingId } = todoState.get();
   const activeCount = todos.filter((todo) => !todo.completed).length;
   const completedCount = todos.length - activeCount;
   // With no todos, activeCount is 0 too; toggle-all shouldn't show as checked.
@@ -198,7 +239,9 @@ export function createTodoPage(route = routePaths.home) {
       createMainSection(
         [
           createTodoList(
-            filterTodos(todos, route).map((todo) => createTodoItem(todo)),
+            filterTodos(todos, route).map((todo) =>
+              createTodoItem(todo, todo.id === editingId),
+            ),
           ),
         ],
         { allCompleted },
