@@ -110,14 +110,28 @@ export function clickCheckbox(checkbox) {
 
 let loadCount = 0;
 
+// A minimal in-memory localStorage: strings in, strings (or null) out.
+export function createStorage(initial = {}) {
+  const items = new Map(Object.entries(initial));
+  return {
+    getItem: (key) => (items.has(key) ? items.get(key) : null),
+    setItem: (key, value) => items.set(key, String(value)),
+    removeItem: (key) => items.delete(key),
+  };
+}
+
 // Installs the fake `document` and `window` and mounts the app at `hash`.
 // Each test file runs in its own process, so state starts fresh per file.
+// `storage` is the page's localStorage; pass one to start with saved todos.
 //
 // `reload()` simulates a browser refresh: it starts a new copy of todo/app.js
-// (new router, reads the hash again) on a new root. Only app.js is reloaded;
-// state.js is shared, standing in for todos that survive the refresh. Don't
-// change state after a reload: the earlier app copies are still subscribed.
-export async function mountTodoApp({ hash = "#/" } = {}) {
+// (new router, reads the hash again, loads todos from the same storage) on a
+// new root. Only app.js is reloaded, so the earlier copies are still
+// subscribed to state: don't change state after a reload.
+export async function mountTodoApp({
+  hash = "#/",
+  storage = createStorage(),
+} = {}) {
   const originalDocument = globalThis.document;
   const originalWindow = globalThis.window;
   let root;
@@ -146,6 +160,7 @@ export async function mountTodoApp({ hash = "#/" } = {}) {
     globalThis.document = createDocument(root);
     globalThis.window = {
       location: { hash: startHash },
+      localStorage: storage,
       addEventListener(type, listener) {
         if (type === "hashchange") hashListeners.push(listener);
       },
@@ -161,6 +176,7 @@ export async function mountTodoApp({ hash = "#/" } = {}) {
 
   return {
     page: () => root.childNodes[0],
+    storage,
     // Same as clicking a link: the hash changes, then `hashchange` fires.
     navigate(nextHash) {
       window.location.hash = nextHash;

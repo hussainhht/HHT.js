@@ -401,12 +401,12 @@ Routes:
 
 ## Stage 22 — Persistence
 
-- [ ] Decide whether TodoMVC state should survive refresh.
-- [ ] Research `localStorage`.
-- [ ] Save state when todos change.
-- [ ] Load saved state when the app starts.
-- [ ] Keep persistence logic separate from framework internals unless persistence is intentionally a framework feature.
-- [ ] Test refreshing the page.
+- [X] Decide whether TodoMVC state should survive refresh.
+- [X] Research `localStorage`.
+- [X] Save state when todos change.
+- [X] Load saved state when the app starts.
+- [X] Keep persistence logic separate from framework internals unless persistence is intentionally a framework feature.
+- [X] Test refreshing the page.
 
 ---
 
