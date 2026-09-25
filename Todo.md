@@ -306,14 +306,14 @@ Routes:
 
 ## Stage 14 — Add Todo Functionality
 
-- [ ] Capture text from the input.
-- [ ] Detect Enter.
-- [ ] Ignore empty todos.
-- [ ] Create a new todo.
-- [ ] Add it to state.
-- [ ] Clear the input after adding.
-- [ ] Confirm the framework rerenders automatically.
-- [ ] Test adding many todos.
+- [X] Capture text from the input.
+- [X] Detect Enter.
+- [X] Ignore empty todos.
+- [X] Create a new todo.
+- [X] Add it to state.
+- [X] Clear the input after adding.
+- [X] Confirm the framework rerenders automatically.
+- [X] Test adding many todos.
 
 ---
 

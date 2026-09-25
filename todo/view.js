@@ -1,5 +1,7 @@
 import { createElement } from "../framework/dom.js";
+import { addTodo, createTodo } from "./actions.js";
 import { routePaths } from "./routes.js";
+import { todoState } from "./state.js";
 
 // Root of the TodoMVC layout. TodoMVC CSS targets `section.todoapp`,
 // so the class name must match exactly. Children are added in later steps.
@@ -16,13 +18,36 @@ export function createHeader() {
   ]);
 }
 
+// The new-todo input is uncontrolled: what the user types lives only in the
+// DOM element, not in state, and is read from the event when it is needed.
+function getNewTodoText(event) {
+  return event.target.value;
+}
+
+// Only Enter submits. `isComposing` is true while an input method (e.g. for
+// Japanese or Chinese) is still building a character, where Enter confirms
+// the character rather than the todo.
+function handleNewTodoKeydown(event) {
+  if (event.key !== "Enter" || event.isComposing) return;
+  // Trimmed so "  buy milk " is saved cleanly and whitespace-only input
+  // counts as empty.
+  const text = getNewTodoText(event).trim();
+  if (text === "") return;
+
+  // Cleared before the state update: adding the todo re-renders the page, so
+  // clearing first doesn't depend on the render keeping this same element.
+  event.target.value = "";
+  addTodo(createTodo(text));
+}
+
 // Input for adding todos. `input.new-todo` is the class TodoMVC CSS and
-// tests look for; no behavior yet — adding todos comes in Stage 14.
+// tests look for.
 export function createNewTodoInput() {
   return createElement("input", {
     class: "new-todo",
     placeholder: "What needs to be done?",
     autofocus: "",
+    onKeydown: handleNewTodoKeydown,
   });
 }
 
@@ -67,10 +92,6 @@ export function createTodoItem(todo, isEditing = false) {
     createElement("input", { class: "edit", value: todo.text }),
   ]);
 }
-
-// TEMPORARY: placeholder todo so the layout can be checked before real
-// state exists. Remove once todos come from state in Stage 14.
-export const fakeTodo = { id: 1, text: "Example todo", completed: false };
 
 // Bottom bar of the app. `footer.footer` holds the item counter, the filter
 // links and the clear-completed button, passed in as children.
@@ -132,9 +153,9 @@ export function createInfoFooter() {
 }
 
 // Full TodoMVC page. `render` mounts a single root, so the app and the info
-// footer are wrapped in a plain div. Uses the fake todo until Stage 14.
+// footer are wrapped in a plain div.
 export function createTodoPage(route = routePaths.home) {
-  const todos = [fakeTodo];
+  const { todos } = todoState.get();
   const activeCount = todos.filter((todo) => !todo.completed).length;
   const completedCount = todos.length - activeCount;
 
