@@ -319,13 +319,13 @@ Routes:
 
 ## Stage 15 — Complete / Uncomplete Todos
 
-- [ ] Add a checkbox to each todo.
-- [ ] Connect it to an event.
-- [ ] Find the todo by ID.
-- [ ] Change its completed state.
-- [ ] Update the store.
-- [ ] Apply the correct completed class.
-- [ ] Test completing and uncompleting several todos.
+- [X] Add a checkbox to each todo.
+- [X] Connect it to an event.
+- [X] Find the todo by ID.
+- [X] Change its completed state.
+- [X] Update the store.
+- [X] Apply the correct completed class.
+- [X] Test completing and uncompleting several todos.
 
 ---
 

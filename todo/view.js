@@ -1,5 +1,5 @@
 import { createElement } from "../framework/dom.js";
-import { addTodo, createTodo } from "./actions.js";
+import { addTodo, createTodo, toggleTodo } from "./actions.js";
 import { routePaths } from "./routes.js";
 import { todoState } from "./state.js";
 
@@ -85,6 +85,7 @@ export function createTodoItem(todo, isEditing = false) {
         class: "toggle",
         type: "checkbox",
         checked: todo.completed,
+        onChange: () => toggleTodo(todo.id),
       }),
       createElement("label", {}, [todo.text]),
       createElement("button", { class: "destroy" }),

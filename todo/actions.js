@@ -48,3 +48,14 @@ export function addTodo(todo) {
     todos: [...current.todos, todo],
   }));
 }
+
+// Flips `completed` on the todo with this ID. Every other todo keeps the same
+// object; the changed one is copied so state is never mutated in place.
+export function toggleTodo(id) {
+  todoState.set((current) => ({
+    ...current,
+    todos: current.todos.map((todo) =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo,
+    ),
+  }));
+}
