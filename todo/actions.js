@@ -83,3 +83,18 @@ export function clearCompleted() {
     };
   });
 }
+
+// Toggle-all: if every todo is already completed, make them all active;
+// otherwise complete them all. It acts on every todo, not just the ones the
+// current filter shows, as in TodoMVC.
+export function toggleAll() {
+  todoState.set((current) => {
+    const completed = !current.todos.every((todo) => todo.completed);
+    return {
+      ...current,
+      todos: current.todos.map((todo) =>
+        todo.completed === completed ? todo : { ...todo, completed },
+      ),
+    };
+  });
+}

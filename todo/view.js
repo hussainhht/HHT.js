@@ -4,6 +4,7 @@ import {
   clearCompleted,
   createTodo,
   deleteTodo,
+  toggleAll,
   toggleTodo,
 } from "./actions.js";
 import { routePaths } from "./routes.js";
@@ -59,12 +60,18 @@ export function createNewTodoInput() {
 
 // Middle part of the app. In TodoMVC, `section.main` holds the toggle-all
 // checkbox (id + label pair) followed by the todo list, passed in as children.
-export function createMainSection(children = []) {
+// The checkbox is checked exactly when every todo is completed.
+export function createMainSection(
+  children = [],
+  { allCompleted = false } = {},
+) {
   return createElement("section", { class: "main" }, [
     createElement("input", {
       id: "toggle-all",
       class: "toggle-all",
       type: "checkbox",
+      checked: allCompleted,
+      onChange: toggleAll,
     }),
     createElement("label", { for: "toggle-all" }, ["Mark all as complete"]),
     children,
@@ -182,15 +189,20 @@ export function createTodoPage(route = routePaths.home) {
   const { todos } = todoState.get();
   const activeCount = todos.filter((todo) => !todo.completed).length;
   const completedCount = todos.length - activeCount;
+  // With no todos, activeCount is 0 too; toggle-all shouldn't show as checked.
+  const allCompleted = todos.length > 0 && activeCount === 0;
 
   return createElement("div", {}, [
     createTodoApp([
       createHeader(),
-      createMainSection([
-        createTodoList(
-          filterTodos(todos, route).map((todo) => createTodoItem(todo)),
-        ),
-      ]),
+      createMainSection(
+        [
+          createTodoList(
+            filterTodos(todos, route).map((todo) => createTodoItem(todo)),
+          ),
+        ],
+        { allCompleted },
+      ),
       createFooter([
         createTodoCount(activeCount),
         createFilters(route),

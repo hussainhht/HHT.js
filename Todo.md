@@ -377,11 +377,11 @@ Routes:
 
 ## Stage 20 — Toggle All
 
-- [ ] Add the toggle-all control.
-- [ ] Detect whether every todo is completed.
-- [ ] If not all are completed, complete them all.
-- [ ] If all are completed, make them active.
-- [ ] Check that the control reflects the correct state.
+- [X] Add the toggle-all control.
+- [X] Detect whether every todo is completed.
+- [X] If not all are completed, complete them all.
+- [X] If all are completed, make them active.
+- [X] Check that the control reflects the correct state.
 
 ---
 

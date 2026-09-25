@@ -9,6 +9,9 @@ function createDocument(root) {
       element.nodeType = 1;
       element.tagName = tagName.toUpperCase();
       element.value = "";
+      // Real inputs always have `checked`; the framework only syncs it when
+      // the property exists.
+      if (element.tagName === "INPUT") element.checked = false;
       element.childNodes = [];
       element.attributes = new Map();
       element.setAttribute = function (name, value) {
