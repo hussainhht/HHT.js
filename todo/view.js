@@ -1,5 +1,5 @@
 import { createElement } from "../framework/dom.js";
-import { addTodo, createTodo, toggleTodo } from "./actions.js";
+import { addTodo, createTodo, deleteTodo, toggleTodo } from "./actions.js";
 import { routePaths } from "./routes.js";
 import { todoState } from "./state.js";
 
@@ -88,7 +88,10 @@ export function createTodoItem(todo, isEditing = false) {
         onChange: () => toggleTodo(todo.id),
       }),
       createElement("label", {}, [todo.text]),
-      createElement("button", { class: "destroy" }),
+      createElement("button", {
+        class: "destroy",
+        onClick: () => deleteTodo(todo.id),
+      }),
     ]),
     createElement("input", { class: "edit", value: todo.text }),
   ]);

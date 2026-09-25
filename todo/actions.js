@@ -59,3 +59,13 @@ export function toggleTodo(id) {
     ),
   }));
 }
+
+// Removes the todo with this ID. If it was the one being edited, edit mode
+// ends too, so `editingId` never points at a todo that no longer exists.
+export function deleteTodo(id) {
+  todoState.set((current) => ({
+    ...current,
+    todos: current.todos.filter((todo) => todo.id !== id),
+    editingId: current.editingId === id ? null : current.editingId,
+  }));
+}

@@ -331,13 +331,13 @@ Routes:
 
 ## Stage 16 — Delete Todos
 
-- [ ] Add the delete/destroy button.
-- [ ] Pass the correct todo ID.
-- [ ] Remove the correct todo from state.
-- [ ] Test deleting the first item.
-- [ ] Test deleting the middle item.
-- [ ] Test deleting the last item.
-- [ ] Test deleting everything.
+- [X] Add the delete/destroy button.
+- [X] Pass the correct todo ID.
+- [X] Remove the correct todo from state.
+- [X] Test deleting the first item.
+- [X] Test deleting the middle item.
+- [X] Test deleting the last item.
+- [X] Test deleting everything.
 
 ---
 
