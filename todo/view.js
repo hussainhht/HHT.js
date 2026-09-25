@@ -1,5 +1,11 @@
 import { createElement } from "../framework/dom.js";
-import { addTodo, createTodo, deleteTodo, toggleTodo } from "./actions.js";
+import {
+  addTodo,
+  clearCompleted,
+  createTodo,
+  deleteTodo,
+  toggleTodo,
+} from "./actions.js";
 import { routePaths } from "./routes.js";
 import { todoState } from "./state.js";
 
@@ -143,9 +149,11 @@ export function createFilters(currentRoute = routePaths.home) {
 // shows it when at least one todo is completed, so return nothing otherwise.
 export function createClearCompleted(completedCount) {
   if (completedCount === 0) return null;
-  return createElement("button", { class: "clear-completed" }, [
-    "Clear completed",
-  ]);
+  return createElement(
+    "button",
+    { class: "clear-completed", onClick: clearCompleted },
+    ["Clear completed"],
+  );
 }
 
 // Info text below the app. It is a sibling of `section.todoapp`, not a

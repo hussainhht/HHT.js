@@ -69,3 +69,17 @@ export function deleteTodo(id) {
     editingId: current.editingId === id ? null : current.editingId,
   }));
 }
+
+// Removes every completed todo and keeps the active ones in their order. Like
+// deleteTodo, it ends edit mode if the todo being edited was removed.
+export function clearCompleted() {
+  todoState.set((current) => {
+    const todos = current.todos.filter((todo) => !todo.completed);
+    const editingKept = todos.some((todo) => todo.id === current.editingId);
+    return {
+      ...current,
+      todos,
+      editingId: editingKept ? current.editingId : null,
+    };
+  });
+}

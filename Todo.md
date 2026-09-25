@@ -367,11 +367,11 @@ Routes:
 
 ## Stage 19 — Clear Completed
 
-- [ ] Show the button when completed todos exist.
-- [ ] Remove all completed todos when clicked.
-- [ ] Keep active todos.
-- [ ] Update the counter.
-- [ ] Confirm filters still work correctly.
+- [X] Show the button when completed todos exist.
+- [X] Remove all completed todos when clicked.
+- [X] Keep active todos.
+- [X] Update the counter.
+- [X] Confirm filters still work correctly.
 
 ---
 
