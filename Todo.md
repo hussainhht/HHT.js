@@ -212,8 +212,6 @@ Current renderer: after starting with complete rerendering, HHT.js now uses a sm
 
 - [X] Decide whether you will use hash routing.
 
-
-
 Decision: HHT.js will use hash-based routing.
 
 Routes:
@@ -240,7 +238,7 @@ Routes:
 
 ---
 
-## Stage 10 — Make a Small Framework Test App
+### Stage 10 — Make a Small Framework Test App
 
 - [X] Do not use TodoMVC yet.
 - [X] Create a small app using only your framework.
@@ -256,35 +254,35 @@ Routes:
 
 ## Stage 11 — Study TodoMVC Carefully
 
-- [ ] Open a TodoMVC example.
-- [ ] Use the application normally.
-- [ ] Make a list of everything it can do.
-- [ ] Inspect the HTML structure.
-- [ ] Look at important classes.
-- [ ] Look at IDs if present.
-- [ ] Look at filters.
-- [ ] Look at completed todo styling.
-- [ ] Look at editing behavior.
-- [ ] Look at the item counter.
-- [ ] Look at clear-completed behavior.
-- [ ] Look at toggle-all behavior.
-- [ ] Check what happens when the todo list becomes empty.
-- [ ] Check what happens when you refresh.
-- [ ] Check each URL/filter.
+- [X] Open a TodoMVC example.
+- [X] Use the application normally.
+- [X] Make a list of everything it can do.
+- [X] Inspect the HTML structure.
+- [X] Look at important classes.
+- [X] Look at IDs if present.
+- [X] Look at filters.
+- [X] Look at completed todo styling.
+- [X] Look at editing behavior.
+- [X] Look at the item counter.
+- [X] Look at clear-completed behavior.
+- [X] Look at toggle-all behavior.
+- [X] Check what happens when the todo list becomes empty.
+- [X] Check what happens when you refresh.
+- [X] Check each URL/filter.
 
 ---
 
 ## Stage 12 — Design Your TodoMVC State
 
-- [ ] Decide what one todo object contains.
-- [ ] Give every todo a unique ID.
-- [ ] Store its text/title.
-- [ ] Store whether it is completed.
-- [ ] Decide whether edit mode belongs in application state.
-- [ ] Store the current filter or derive it from the router.
-- [ ] Write the initial state.
-- [ ] Keep the state as small as possible.
-- [ ] Avoid storing information that can easily be calculated from existing state.
+- [X] Decide what one todo object contains.
+- [X] Give every todo a unique ID.
+- [X] Store its text/title.
+- [X] Store whether it is completed.
+- [X] Decide whether edit mode belongs in application state.
+- [X] Store the current filter or derive it from the router.
+- [X] Write the initial state.
+- [X] Keep the state as small as possible.
+- [X] Avoid storing information that can easily be calculated from existing state.
 
 ---
 
