@@ -288,19 +288,19 @@ Routes:
 
 ## Stage 13 — Build TodoMVC Layout First
 
-- [ ] Create the main TodoMVC container.
-- [ ] Create the title.
-- [ ] Create the new-todo input.
-- [ ] Create the main todo section.
-- [ ] Create the todo list.
-- [ ] Create one temporary fake todo.
-- [ ] Create the footer.
-- [ ] Create the remaining-items text.
-- [ ] Create All/Active/Completed links.
-- [ ] Create Clear Completed.
-- [ ] Match the required classes and IDs.
-- [ ] Do not implement all behavior yet.
-- [ ] First make the structure visually correct.
+- [X] Create the main TodoMVC container.
+- [X] Create the title.
+- [X] Create the new-todo input.
+- [X] Create the main todo section.
+- [X] Create the todo list.
+- [X] Create one temporary fake todo.
+- [X] Create the footer.
+- [X] Create the remaining-items text.
+- [X] Create All/Active/Completed links.
+- [X] Create Clear Completed.
+- [X] Match the required classes and IDs.
+- [X] Do not implement all behavior yet.
+- [X] First make the structure visually correct.
 
 ---
 

@@ -81,7 +81,7 @@ test("the mounted page rerenders automatically when state changes", async () => 
   };
 
   try {
-    await import("../todo/app.js");
+    await import("../todo/demo-app.js");
     assert.match(getTextContent(root.childNodes[0]), /404 Not Found/);
     assert.equal(window.location.hash, "#/missing");
 
