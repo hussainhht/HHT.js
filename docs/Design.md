@@ -1,4 +1,16 @@
-> **Warning:** This file contains early design ideas and may not match the current HHT.js API.
+> **Historical design notes. This is NOT the current HHT.js API.**
+> This file records early ideas written before the framework was implemented. Most of the API shown here was never built:
+>
+> | This file shows | Current HHT.js |
+> | --- | --- |
+> | `import hht from "./hht.js"`, `hht.state(...)` | Named exports: `import { state } from "./framework/index.js"` |
+> | `hht.div(...)`, `hht.button("Save", {...})` | `createElement("div", attrs, children)` only |
+> | Children as extra arguments | Children in one array (third argument) |
+> | `hht.mount("#app", App())` to show an app | `render("#app", App())`; `mount()` only appends once |
+> | UI updates automatically when state changes; function children like `hht.p(() => ...)` | You subscribe a render function; function children are not supported |
+> | `hht.router({ "/": Home })`, `/todos/:id` params | `createRouter()` + `register(path)`; exact paths only, no params |
+> | `hht.createState(...)`, advanced event/route config objects | Do not exist |
+>
 > See [`documentation.md`](documentation.md) for the current user documentation.
 
 # hht.js Design Overview

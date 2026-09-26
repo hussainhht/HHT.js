@@ -1,3 +1,5 @@
+> **Historical snapshot.** This audit describes commit `0719855` (2026-09-26). Several gaps it reports have since been fixed: keyed lists, `unsubscribe`, element render targets, `unmount()`, refs, global events (`on()`), style objects, full boolean-attribute handling and stable event listeners now exist. Line numbers refer to the old code. For the current behaviour, see [`docs/documentation.md`](docs/documentation.md).
+
 # HHT.js Project Audit
 
 > Audit date: 2026-09-26 · Commit audited: `0719855` (Stage 22 — Persistence) · Test run: `npm test` → **32/32 passing**
