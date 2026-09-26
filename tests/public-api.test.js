@@ -42,7 +42,7 @@ test("the entry point re-exports the implementation, not copies", () => {
 });
 
 test("internal helpers stay out of the public API", () => {
-  for (const name of ["renderElement", "isEvent", "addEvent", "notFound"]) {
+  for (const name of ["renderElement", "isEvent", "setEventHandler", "notFound"]) {
     assert.equal(name in hht, false, name);
   }
 });

@@ -2,10 +2,40 @@ export function isEvent(name) {
   return name.startsWith("on");
 }
 
-export function addEvent(element, name, handler) {
-  const eventName = name.slice(2).toLowerCase();
+// Declarative handlers (`onClick: fn`). Each element gets one stable native
+// listener per `on…` attribute, which calls whatever handler the latest render
+// passed. A new function on every render (an inline arrow) then only updates
+// `record.handler`, instead of removing and re-adding the browser listener.
+// The WeakMap does not keep removed elements alive.
+const handlersByElement = new WeakMap();
 
-  element.addEventListener(eventName, handler);
+// Sets the handler for the `on…` attribute `name` ("onClick") on `element`:
+// a function attaches or updates it, null/undefined removes it.
+export function setEventHandler(element, name, handler) {
+  const eventName = name.slice(2).toLowerCase();
+  let records = handlersByElement.get(element);
+  const record = records?.get(name);
+
+  if (handler == null) {
+    if (record) {
+      element.removeEventListener(eventName, record.listener);
+      records.delete(name);
+    }
+  } else if (record) {
+    record.handler = handler;
+  } else {
+    const newRecord = { handler, listener: null };
+    // A normal function keeps `this` as the element, as with addEventListener.
+    newRecord.listener = function (event) {
+      return newRecord.handler.call(this, event);
+    };
+    if (!records) {
+      records = new Map();
+      handlersByElement.set(element, records);
+    }
+    records.set(name, newRecord);
+    element.addEventListener(eventName, newRecord.listener);
+  }
 }
 
 // Listens to an event on any event target (window, document, an element...)

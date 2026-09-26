@@ -1,4 +1,4 @@
-import { isEvent, addEvent } from "./events.js";
+import { isEvent, setEventHandler } from "./events.js";
 
 const mountedTrees = new WeakMap();
 // HTML boolean attributes: the attribute being present means "on", whatever
@@ -195,7 +195,7 @@ export function renderElement(node) {
   for (const [name, value] of Object.entries(node.attrs)) {
     if (name === "key" || name === "ref" || name === "style") continue;
     if (isEvent(name)) {
-      if (value) addEvent(element, name, value);
+      setEventHandler(element, name, value);
     } else {
       setDomAttribute(element, name, value);
     }
@@ -251,7 +251,7 @@ function updateAttributes(element, previous = {}, next = {}) {
     if (name === "key" || name === "ref" || name === "style" || Object.hasOwn(next, name)) continue;
 
     if (isEvent(name)) {
-      element.removeEventListener(name.slice(2).toLowerCase(), value);
+      setEventHandler(element, name, null);
     } else {
       removeDomAttribute(element, name);
     }
@@ -272,10 +272,7 @@ function updateAttributes(element, previous = {}, next = {}) {
     }
 
     if (isEvent(name)) {
-      if (oldValue) {
-        element.removeEventListener(name.slice(2).toLowerCase(), oldValue);
-      }
-      if (value) addEvent(element, name, value);
+      setEventHandler(element, name, value);
     } else {
       setDomAttribute(element, name, value);
     }

@@ -109,7 +109,7 @@ You don't need to know this to use HHT.js. `index.js` only re-exports functions 
 | `framework/router.js` | The hash router (`createRouter`) |
 | `framework/events.js` | Turns `on…` attributes into event listeners (used by `dom.js`), and `on()` for other targets |
 
-Some of these files also export **internal helpers** (`renderElement`, `notFound`, `isEvent`, `addEvent`). The framework uses them itself, and the tests check them, but they are not part of the public API: they are not exported from `index.js` and may change without notice.
+Some of these files also export **internal helpers** (`renderElement`, `notFound`, `isEvent`, `setEventHandler`). The framework uses them itself, and the tests check them, but they are not part of the public API: they are not exported from `index.js` and may change without notice.
 
 ---
 
@@ -484,7 +484,7 @@ createElement(
 );
 ```
 
-You never call `addEventListener()` yourself. When HHT.js creates the element, it sees that `onClick` starts with `on`, works out the event name (`click`) and attaches your function to the element for you.
+You never call `addEventListener()` yourself. When HHT.js creates the element, it sees that `onClick` starts with `on`, works out the event name (`click`) and attaches a listener to the element that calls your function.
 
 ### The event object
 
@@ -559,7 +559,17 @@ createElement("form", {
 
 ### Handlers and re-rendering
 
-When the page is rendered again (see [Rendering](#rendering)), HHT.js compares each handler with the one from the previous render. If it is the same function, nothing happens. If it is a different function, the old one is removed and the new one is added, so **a handler never runs twice**.
+When the page is rendered again (see [Rendering](#rendering)), the element keeps **one browser listener per `on…` attribute** for as long as it has that attribute. If you pass a different function than last time, HHT.js only changes which function that listener calls. So after a re-render, only your **latest** handler runs, exactly once.
+
+This makes inline arrow functions fine to use:
+
+```js
+createElement("button", { onClick: () => save(todo.id) }, ["Save"]);
+```
+
+Such a function is new on every render, but HHT.js does not remove and re-add the browser listener each time; it just switches to the new function. (Your view function still creates a new function object on each render, which is cheap. Only the browser listener is kept.)
+
+The listener is removed when the `on…` attribute becomes `null`/`undefined` or disappears, and a new one is attached if a handler comes back later. When the element itself is removed from the page, its listeners go with it.
 
 ### Handler values
 
@@ -1764,13 +1774,13 @@ These are exported from their own files so the framework modules (and the framew
 | --- | --- | --- |
 | `renderElement(vnode)` | `framework/dom.js` | Building a real DOM node from a virtual node, inside `render` and `mount` |
 | `notFound(path)` | `framework/router.js` | Building the 404 page returned by `getCurrentView` |
-| `isEvent(name)`, `addEvent(element, name, handler)` | `framework/events.js` | Detecting `on…` attributes and attaching the listener, inside `dom.js` |
+| `isEvent(name)`, `setEventHandler(element, name, handler)` | `framework/events.js` | Detecting `on…` attributes, and keeping one stable listener per attribute that calls the current handler, inside `dom.js` |
 
 ### Attribute and event rules at a glance
 
 | Key in`attrs`                          | Behavior                                                                         |
 | ---------------------------------------- | -------------------------------------------------------------------------------- |
-| `onXxx` (any key starting with `on`) | Event listener for event`xxx` (lower-cased). Must be a function, `null` or `undefined` (else `createElement` throws); `null`/missing = no listener. |
+| `onXxx` (any key starting with `on`) | Event listener for event`xxx` (lower-cased). Must be a function, `null` or `undefined` (else `createElement` throws); `null`/missing = no listener. A changed function is swapped in without re-registering the browser listener. |
 | Boolean HTML attributes (`hidden`, `disabled`, `required`, `readonly`, `open`, … see [the list](#boolean-attributes-hidden-disabled-required-)) | `true` → present; `false`/`null`/`undefined` → absent; a string → written as given |
 | `checked`, `selected`, `disabled`, `muted` | Boolean attributes whose DOM property is also set and re-synced every render |
 | `value`                                | Set as DOM property and attribute; re-synced every render if the user changed it |
@@ -1806,7 +1816,6 @@ These are true of the current version. Plan around them.
 - `on…` attributes take no listener options (`once`, `capture`, `passive`); use `on()` on the element (via a ref) when you need them.
 - Listeners added with `on()` are not removed automatically (not by `unmount()` either); call the function it returns.
 - There are no event modifiers or shortcuts (such as an "Enter only" handler): check `event.key` etc. in your handler.
-- Inline arrow functions are new on every render, so HHT.js removes and re-adds those listeners on each render. This is correct but does extra work.
 
 **State**
 

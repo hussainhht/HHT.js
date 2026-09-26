@@ -288,7 +288,7 @@ test("handler A → B replaces it, and the same handler is not re-added", () => 
   const button = renderOne(root, "button", { onClick: handlerA });
   button.log.length = 0;
   renderOne(root, "button", { onClick: handlerB });
-  assert.deepEqual(button.log, [["unlisten", "click"], ["listen", "click"]]);
+  assert.deepEqual(button.log, [], "the native listener stays; only the handler changes");
 
   button.log.length = 0;
   renderOne(root, "button", { onClick: handlerB });
