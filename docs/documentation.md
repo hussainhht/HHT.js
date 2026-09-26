@@ -22,17 +22,18 @@ The TodoMVC app in `todo/` is built entirely with HHT.js and is the best larger 
 6. [Attributes](#attributes)
 7. [Children and nesting](#children-and-nesting)
 8. [Events](#events)
-9. [State](#state)
-10. [Rendering](#rendering)
-11. [Connecting state to rendering](#connecting-state-to-rendering)
-12. [Element refs](#element-refs)
-13. [How rendering works](#how-rendering-works)
-14. [Routing](#routing)
-15. [Why HHT.js is a framework](#why-hhtjs-is-a-framework)
-16. [Complete example: counter](#complete-example-counter)
-17. [Complete example: pages with routing](#complete-example-pages-with-routing)
-18. [API reference](#api-reference)
-19. [Current limitations](#current-limitations)
+9. [Global events](#global-events)
+10. [State](#state)
+11. [Rendering](#rendering)
+12. [Connecting state to rendering](#connecting-state-to-rendering)
+13. [Element refs](#element-refs)
+14. [How rendering works](#how-rendering-works)
+15. [Routing](#routing)
+16. [Why HHT.js is a framework](#why-hhtjs-is-a-framework)
+17. [Complete example: counter](#complete-example-counter)
+18. [Complete example: pages with routing](#complete-example-pages-with-routing)
+19. [API reference](#api-reference)
+20. [Current limitations](#current-limitations)
 
 ---
 
@@ -78,6 +79,7 @@ import {
   unmount,
   state,
   createRouter,
+  on,
 } from "./framework/index.js";
 ```
 
@@ -93,6 +95,7 @@ The path is relative to **your** file. The examples in this guide assume your Ja
 | `unmount` | Clear a container and forget what was rendered there ([Rendering](#unmounttarget--clear-a-container)) |
 | `state` | Create a piece of state ([State](#state)) |
 | `createRouter` | Create a hash router ([Routing](#routing)) |
+| `on` | Listen to events on `window`, `document` or any other target ([Global events](#global-events)) |
 
 ### How the framework is organised
 
@@ -100,11 +103,11 @@ You don't need to know this to use HHT.js. `index.js` only re-exports functions 
 
 | File | Contains |
 | --- | --- |
-| `framework/index.js` | The public API: the six functions above |
+| `framework/index.js` | The public API: the seven functions above |
 | `framework/dom.js` | Virtual nodes, rendering and the diff (`createElement`, `render`, `mount`, `unmount`) |
 | `framework/store.js` | State (`state`) |
 | `framework/router.js` | The hash router (`createRouter`) |
-| `framework/events.js` | Turns `on…` attributes into event listeners, used by `dom.js` |
+| `framework/events.js` | Turns `on…` attributes into event listeners (used by `dom.js`), and `on()` for other targets |
 
 Some of these files also export **internal helpers** (`renderElement`, `notFound`, `isEvent`, `addEvent`). The framework uses them itself, and the tests check them, but they are not part of the public API: they are not exported from `index.js` and may change without notice.
 
@@ -512,10 +515,122 @@ When the page is rendered again (see [Rendering](#rendering)), HHT.js compares e
 
 > Do not write `onClick: condition && handler`: when `condition` is `false` the browser throws an error. Use `onClick: condition ? handler : null`.
 
-### What events cannot do yet
+### What `on…` attributes cannot do
 
-- Events can only be attached to elements you create with `createElement`. Listening on `window` or `document` (for example global keyboard shortcuts) is not handled by HHT.js; use the browser's `window.addEventListener()` for that.
-- There is no way to pass listener options such as `once`, `capture` or `passive`.
+- They only attach events to elements you render with `createElement`. For `window`, `document` and other targets, use [`on()`](#global-events).
+- They take no listener options such as `once`, `capture` or `passive`. If you need those on an element, get it with a [ref](#element-refs) and use `on(element, …, options)`.
+
+---
+
+## Global events
+
+`onClick`, `onInput` and the other `on…` attributes attach events to elements **you render**. Some events don't belong to any element you render: key presses anywhere on the page, the window being resized, the tab being hidden. For those, use `on()`:
+
+```js
+import { on } from "./framework/index.js";
+
+const stop = on(window, "keydown", (event) => {
+  console.log(event.key);
+});
+
+// later, when you no longer need it:
+stop();
+```
+
+| You want to listen on… | Use |
+| --- | --- |
+| An element you render | An `on…` attribute: `createElement("button", { onClick: save })` |
+| `window`, `document`, or any other event target | `on(target, "eventname", handler)` |
+
+### `on(target, eventName, handler, options)`
+
+- **`target`**: anything with `addEventListener()` and `removeEventListener()`: `window`, `document`, an element (for example one you got from a [ref](#element-refs)), and so on.
+- **`eventName`**: the browser's event name, exactly as `addEventListener` expects it: `"keydown"`, `"keyup"`, `"resize"`, `"visibilitychange"`. Note: this is the plain event name, not the `onKeyDown` attribute form.
+- **`handler`**: your function. It receives the browser's normal **event object** (no wrapper), and `this` is the target, just as with `addEventListener`.
+- **`options`** (optional): passed to the browser unchanged. Either `true`/`false` (capture), or an object such as `{ capture: true }`, `{ once: true }` or `{ passive: true }`.
+
+**Returns** a function that stops listening. Like the unsubscribe functions from `subscribe()`:
+
+- calling it **more than once is safe**; after the first call it does nothing;
+- every `on()` call is its own listener. Registering the same handler twice gives two listeners (it runs twice per event), and each returned function removes only its own. (Plain `addEventListener` would silently ignore the second registration.)
+- with `{ once: true }`, the browser removes the listener after it runs once; calling the returned function afterwards is still fine.
+
+Invalid arguments throw an HHT.js error straight away:
+
+| Mistake | Error |
+| --- | --- |
+| Target is `null`, a number, a plain object, … | `HHT.js: Event target must support addEventListener() and removeEventListener().` |
+| Event name is empty or not a string | `HHT.js: Event name must be a non-empty string.` |
+| Handler is not a function | `HHT.js: Event handler must be a function.` |
+
+`on()` only adds a listener. It does not create state, render anything or remove itself when something is unmounted: you call the returned function when you are done.
+
+### Example: game keyboard controls
+
+A game should react to the arrow keys no matter which element has focus, so listen on `window` rather than on the board element (a `keydown` handler on the board only runs while the board itself has focus):
+
+```js
+import { on } from "./framework/index.js";
+
+const pressedKeys = new Set();
+
+const stopKeyDown = on(window, "keydown", (event) => {
+  pressedKeys.add(event.key);
+});
+
+const stopKeyUp = on(window, "keyup", (event) => {
+  pressedKeys.delete(event.key);
+});
+
+// later
+stopKeyDown();
+stopKeyUp();
+```
+
+Keys typed into an input (a chat box, a nickname field) also reach `window`. A game usually ignores movement keys while the user is typing, for example by checking `event.target` before handling the key.
+
+To stop the browser's own reaction to a key (arrow keys scrolling the page, for example), call `preventDefault()` as usual:
+
+```js
+on(window, "keydown", (event) => {
+  if (event.key === "ArrowUp") event.preventDefault();
+});
+```
+
+### Example: other global events
+
+```js
+const stopVisibility = on(document, "visibilitychange", () => {
+  console.log(document.hidden ? "tab hidden" : "tab visible");
+});
+
+const stopResize = on(window, "resize", () => {
+  console.log(window.innerWidth, window.innerHeight);
+});
+```
+
+### Cleaning up when leaving a screen
+
+Group the listeners a screen needs into one start function that returns one stop function:
+
+```js
+function startGameControls() {
+  const stopDown = on(window, "keydown", handleKeyDown);
+  const stopUp = on(window, "keyup", handleKeyUp);
+
+  return () => {
+    stopDown();
+    stopUp();
+  };
+}
+
+const stopControls = startGameControls();
+
+// when leaving the game screen
+stopControls();
+```
+
+Moving from one screen to the next (lobby → game → results) then never leaves old keyboard listeners behind.
 
 ---
 
@@ -1547,6 +1662,12 @@ import { createElement, render, mount, unmount, state, createRouter } from "./fr
 | `router.getCurrentView(renderRoute)` | `(path) => vnode` | virtual node | `renderRoute(path)` for registered paths, otherwise the built-in 404 view |
 | `router.subscribe(listener)` | `(path) => {}` | unsubscribe function | Calls `listener` whenever the route is set. Call the returned function to remove this subscription. |
 
+#### Global events
+
+| API | Parameters | Returns | Purpose |
+| --- | --- | --- | --- |
+| `on(target, eventName, handler, options?)` | `target`: any object with `addEventListener`/`removeEventListener` (`window`, `document`, elements…); `eventName`: non-empty string such as `"keydown"`; `handler`: `(event) => {}`, receives the native event; `options`: optional boolean or `{ capture, once, passive, … }`, passed to the browser unchanged | stop function | Adds a listener. The stop function removes exactly this listener; calling it again does nothing. Throws an HHT.js error for an invalid target, name or handler. |
+
 ### Internal modules (not public API)
 
 These are exported from their own files so the framework modules (and the framework's tests) can use them. They are **not** exported from `framework/index.js`, and applications should not rely on them.
@@ -1590,8 +1711,9 @@ These are true of the current version. Plan around them.
 
 - The event name is the lower-cased text after `on`. Use `onDblClick` (not `onDoubleClick`). Custom events must have all-lowercase names.
 - A handler value of `false` causes an error; use `null` for "no handler".
-- No event options (`once`, `capture`, `passive`).
-- No framework support for `window`/`document` events (global keyboard shortcuts, resize). Use `window.addEventListener()` directly for those.
+- `on…` attributes take no listener options (`once`, `capture`, `passive`); use `on()` on the element (via a ref) when you need them.
+- Listeners added with `on()` are not removed automatically (not by `unmount()` either); call the function it returns.
+- There are no event modifiers or shortcuts (such as an "Enter only" handler): check `event.key` etc. in your handler.
 - Inline arrow functions are new on every render, so HHT.js removes and re-adds those listeners on each render. This is correct but does extra work.
 
 **State**

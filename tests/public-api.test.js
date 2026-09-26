@@ -5,11 +5,13 @@ import {
   createElement,
   createRouter,
   mount,
+  on,
   render,
   state,
   unmount,
 } from "../framework/index.js";
 import * as dom from "../framework/dom.js";
+import * as events from "../framework/events.js";
 import * as router from "../framework/router.js";
 import * as store from "../framework/store.js";
 
@@ -18,6 +20,7 @@ test("the entry point exports exactly the public API", () => {
     "createElement",
     "createRouter",
     "mount",
+    "on",
     "render",
     "state",
     "unmount",
@@ -33,6 +36,7 @@ test("the entry point re-exports the implementation, not copies", () => {
   assert.equal(render, dom.render);
   assert.equal(mount, dom.mount);
   assert.equal(unmount, dom.unmount);
+  assert.equal(on, events.on);
   assert.equal(state, store.state);
   assert.equal(createRouter, router.createRouter);
 });
