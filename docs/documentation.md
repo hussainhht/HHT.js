@@ -152,7 +152,7 @@ createElement(tag, attrs, children)
 | Parameter    | Type                      | Default    | Meaning                                                                |
 | ------------ | ------------------------- | ---------- | ---------------------------------------------------------------------- |
 | `tag`      | string                    | (required) | The HTML tag name, e.g.`"div"`, `"button"`, `"input"`            |
-| `attrs`    | object                    | `{}`     | Attributes, event handlers, and the reserved `key` / `ref`, e.g.`{ class: "title", onClick: fn }` |
+| `attrs`    | object                    | `{}`     | Attributes, event handlers, `style` (string or object), and the reserved `key` / `ref`, e.g.`{ class: "title", onClick: fn }` |
 | `children` | array (or a single child) | `[]`     | What goes inside the element: text, numbers, other elements            |
 
 **Returns:** a *virtual node*: a plain JavaScript object that **describes** an element. It is not a real DOM element yet and nothing appears on the page until you pass it to [`render()`](#rendering).
@@ -266,13 +266,58 @@ createElement("input", { class: "new-todo", autofocus: "" });  // from todo/view
 
 ### Inline styles
 
-`style` works as a **string**, like in HTML:
+`style` can be a **string**, like in HTML, or an **object** with one entry per CSS property.
+
+**String:**
 
 ```js
 createElement("div", { style: "color: red; transform: translate(40px, 0)" });
 ```
 
-Style **objects** (`style: { color: "red" }`) are not supported: they produce `style="[object Object]"`.
+The string becomes the element's `style` attribute. When it changes, the whole attribute is replaced.
+
+**Object:**
+
+```js
+createElement("div", {
+  style: {
+    color: "white",
+    backgroundColor: "black",
+    transform: "translate3d(20px, 30px, 0)",
+  },
+});
+```
+
+Each entry is set on the element's `style` directly (`element.style.backgroundColor = "black"`). Write property names in **camelCase**, as in JavaScript: `backgroundColor`, `marginTop`, `zIndex`. CSS custom properties keep their dashes and are set with `setProperty()`:
+
+```js
+createElement("div", { style: { "--player-x": "20px" } });
+```
+
+Prefer the object form when values change from render to render:
+
+```js
+createElement("span", { style: { color: active ? "green" : "gray", fontWeight: "bold" } });
+```
+
+On each render HHT.js compares the new object with the previous one and only touches the properties that differ: if only `color` changed, only `color` is written. A string is replaced as a whole.
+
+Rules for style objects:
+
+| You write | Result |
+| --- | --- |
+| A property with a string value | That property is set |
+| A property with a number | Set exactly as given. HHT.js **does not add units**: `width: 100` is ignored by the browser; write `width: "100px"`. Unitless properties such as `opacity: 0.5` or `zIndex: 2` work. |
+| A property set to `null` or `undefined` | That property is removed, e.g. `{ color: isError ? "red" : null }` |
+| A property that was in the previous object but is missing now | That property is removed |
+| `style: {}`, `style: null`, or no `style` | Every style the previous `style` value set is removed |
+| Switching from a string to an object, or back | The old styles are cleared completely, then the new ones are applied |
+
+HHT.js only reads your style object; it never changes it.
+
+`style` must be a string, an object, `null` or `undefined`. Anything else (a number, `true`, an array, a function) throws `HHT.js: style must be a string, object, null, or undefined.` when you call `createElement`.
+
+For styles that change many times per second, such as a moving game character, see [Fast updates without re-rendering](#example-fast-updates-without-re-rendering).
 
 ### Attributes that start with `on`
 
@@ -1096,7 +1141,27 @@ function drawPlayer(x, y) {
 
 After `unmount("#game")`, `playerElement` is `null` again, so `drawPlayer` stops touching an element that is gone.
 
-Be careful not to change, with a ref, something that the element's virtual node also controls (for example setting `className` yourself while also passing `class`): the next render will set it back. Use refs for things the virtual node does not describe, like `style.transform` here or focus.
+### Style objects or refs?
+
+Both can set `transform`. Use them for different jobs:
+
+- **Style objects**: when a render happens anyway, for things that change now and then (a player's color when hit, a position after a turn-based move):
+
+  ```js
+  createElement("div", {
+    class: "player",
+    style: {
+      position: "absolute",
+      transform: `translate3d(${x}px, ${y}px, 0)`,
+    },
+  });
+  ```
+
+- **A ref**: for things that change every frame (smooth 60 FPS movement). Write directly to the element, as in `drawPlayer` above. Do **not** call `state.set()` and `render()` 60 times per second just to move one element: each render rebuilds and compares the whole tree of its container.
+
+**Give each property one owner.** If the game loop writes `style.transform` through a ref, leave `transform` out of that element's `style` object. Otherwise the next render sets `transform` back to the virtual node's value whenever that value changes, and the two keep overwriting each other. HHT.js only touches the style properties the virtual node mentions, so a property written only through the ref (like `transform` in `drawPlayer`) is left alone by renders.
+
+The same applies to anything else the virtual node controls: if you set `className` yourself while also passing `class`, the next render sets it back. Use refs for things the virtual node does not describe, like the game-loop `transform` here, or focus.
 
 ---
 
@@ -1636,7 +1701,7 @@ import { createElement, render, mount, unmount, state, createRouter } from "./fr
 
 | API | Parameters | Returns | Purpose |
 | --- | --- | --- | --- |
-| `createElement(tag, attrs = {}, children = [])` | `tag`: string; `attrs`: object of HTML attributes, `on…` handlers, and the reserved `key` (list identity) and `ref` (callback receiving the real element); `children`: array (nested arrays flattened; `null`/`undefined`/booleans skipped) or a single child | Virtual node `{ tag, attrs, children }` | Describes an element. Throws if two children have the same `key`, or if `ref` is not a function/`null`/`undefined`. |
+| `createElement(tag, attrs = {}, children = [])` | `tag`: string; `attrs`: object of HTML attributes, `on…` handlers, `style` (string or object), and the reserved `key` (list identity) and `ref` (callback receiving the real element); `children`: array (nested arrays flattened; `null`/`undefined`/booleans skipped) or a single child | Virtual node `{ tag, attrs, children }` | Describes an element. Throws if two children have the same `key`, if `ref` is not a function/`null`/`undefined`, or if `style` is not a string/object/`null`/`undefined`. |
 | `render(target, vnode)` | `target`: CSS selector string or DOM element; `vnode`: one virtual node | nothing | First call: replaces the container's content. Later calls: updates only what changed. **Use this to show and update your app.** |
 | `mount(target, vnode)` | `target`: CSS selector string or DOM element; `vnode`: one virtual node | nothing | Appends the elements once; no updates, no tracking |
 | `unmount(target)` | `target`: CSS selector string or DOM element | nothing | Empties the container (content from `render` or `mount`) and forgets its previous tree; the next `render` starts fresh. Safe to repeat. |
@@ -1688,6 +1753,8 @@ These are exported from their own files so the framework modules (and the framew
 | value`null` or `undefined`           | Attribute is not set / is removed                                                |
 | `key`                                  | Not an attribute: identifies the element among its siblings for keyed diffing; never rendered |
 | `ref`                                  | Not an attribute: function called with the real element after render, and with `null` when it is removed; never rendered |
+| `style` (string)                         | Set as the whole `style` attribute; replaced as a whole when it changes |
+| `style` (object)                         | Each property set on `element.style` (camelCase names; `--custom` names via `setProperty`); only changed properties are written; `null`/`undefined`/missing properties are removed; no units added |
 | anything else                            | `setAttribute(key, value)`: use HTML names (`class`, `for`, `data-*`)    |
 
 ---
@@ -1702,7 +1769,8 @@ These are true of the current version. Plan around them.
 - **Function children** (e.g. `() => count.get()`) are not supported and cause an error.
 - `attrs` must be an object; `null` causes an error. Use `{}`.
 - Only `checked`, `disabled` and `selected` understand `true`/`false`. For other boolean attributes (`hidden`, `readonly`, `required`, …) use `""` for on and `null` for off.
-- `style` must be a string. Style objects are not supported.
+- HHT.js does not add CSS units to numbers in style objects: write `"100px"`, not `100`.
+- In style objects, only names starting with `--` are treated as custom properties (set with `setProperty()`); write all other names in camelCase (`backgroundColor`).
 - `class` must be a string (no arrays or objects).
 - Every attribute whose name starts with `on` is treated as an event.
 - A controlled `<select>` (`value` on the `select`) is not selected correctly on its first render, because the value is set before the `<option>`s are added. Use `selected: true` on the right `<option>` instead.

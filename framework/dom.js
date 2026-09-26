@@ -35,6 +35,18 @@ function checkRef(ref) {
   }
 }
 
+// `style` is a CSS string (set as the whole attribute) or an object of
+// properties (set one by one on element.style). Arrays are not style objects.
+function isStyleObject(style) {
+  return typeof style === "object" && style !== null && !Array.isArray(style);
+}
+
+function checkStyle(style) {
+  if (style != null && typeof style !== "string" && !isStyleObject(style)) {
+    throw new Error("HHT.js: style must be a string, object, null, or undefined.");
+  }
+}
+
 // Ref calls are collected while the DOM is built or patched, and run when
 // render(), mount() or unmount() has finished, so a ref always sees its
 // element in place. All ref(null) cleanups run before the new ref(element)
@@ -63,6 +75,50 @@ function releaseRefs(tree) {
   if (tree.attrs.ref) refCleanups.push(tree.attrs.ref);
 }
 
+// Custom properties ("--player-x") only work through setProperty(). Values are
+// written as given: HHT.js never adds units such as "px".
+function setStyleProperty(style, name, value) {
+  if (value == null) removeStyleProperty(style, name);
+  else if (name.startsWith("--")) style.setProperty(name, String(value));
+  else style[name] = value;
+}
+
+function removeStyleProperty(style, name) {
+  if (name.startsWith("--")) style.removeProperty(name);
+  else style[name] = "";
+}
+
+// Updates inline styles from the previous `style` value to the next one.
+// Object to object only writes the properties that changed. HHT.js only
+// removes styles that the previous `style` value set, so styles written
+// through a ref on properties the vnode never mentions are left alone.
+function updateStyle(element, oldStyle, newStyle) {
+  if (oldStyle === newStyle || (oldStyle == null && newStyle == null)) return;
+
+  const oldIsObject = isStyleObject(oldStyle);
+
+  if (!isStyleObject(newStyle)) {
+    if (typeof newStyle === "string") {
+      element.setAttribute("style", newStyle); // replaces all inline styles
+    } else if (oldIsObject) {
+      for (const name of Object.keys(oldStyle)) removeStyleProperty(element.style, name);
+    } else {
+      element.removeAttribute("style"); // old value was a string
+    }
+    return;
+  }
+
+  if (typeof oldStyle === "string") element.removeAttribute("style");
+  const previous = oldIsObject ? oldStyle : {};
+
+  for (const name of Object.keys(previous)) {
+    if (!Object.hasOwn(newStyle, name)) removeStyleProperty(element.style, name);
+  }
+  for (const [name, value] of Object.entries(newStyle)) {
+    if (value !== previous[name]) setStyleProperty(element.style, name, value);
+  }
+}
+
 function removeDomAttribute(element, name) {
   if (booleanAttributes.has(name) && name in element) element[name] = false;
   if (name === "value" && "value" in element) element.value = "";
@@ -87,6 +143,7 @@ function setDomAttribute(element, name, value) {
 
 export function createElement(tag, attrs = {}, children = []) {
   checkRef(attrs?.ref);
+  checkStyle(attrs?.style);
   const normalized = normalizeChildren(children);
   checkUniqueKeys(normalized);
   return {
@@ -104,13 +161,14 @@ export function renderElement(node) {
   const element = document.createElement(node.tag);
 
   for (const [name, value] of Object.entries(node.attrs)) {
-    if (name === "key" || name === "ref") continue;
+    if (name === "key" || name === "ref" || name === "style") continue;
     if (isEvent(name)) {
       addEvent(element, name, value);
     } else {
       setDomAttribute(element, name, value);
     }
   }
+  updateStyle(element, undefined, node.attrs.style);
 
   for (const child of node.children) {
     element.appendChild(renderElement(child));
@@ -158,7 +216,7 @@ function replaceNode(parent, currentNode, previousTree, nextTree) {
 
 function updateAttributes(element, previous = {}, next = {}) {
   for (const [name, value] of Object.entries(previous)) {
-    if (name === "key" || name === "ref" || Object.hasOwn(next, name)) continue;
+    if (name === "key" || name === "ref" || name === "style" || Object.hasOwn(next, name)) continue;
 
     if (isEvent(name)) {
       element.removeEventListener(name.slice(2).toLowerCase(), value);
@@ -167,8 +225,10 @@ function updateAttributes(element, previous = {}, next = {}) {
     }
   }
 
+  updateStyle(element, previous.style, next.style);
+
   for (const [name, value] of Object.entries(next)) {
-    if (name === "key" || name === "ref") continue;
+    if (name === "key" || name === "ref" || name === "style") continue;
     const oldValue = previous[name];
     if (oldValue === value) {
       if (name === "value" && "value" in element && element.value !== (value == null ? "" : String(value))) {
