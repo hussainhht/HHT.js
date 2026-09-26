@@ -1,5 +1,4 @@
-import { render } from "../framework/dom.js";
-import { createRouter } from "../framework/router.js";
+import { createRouter, render } from "../framework/index.js";
 import { routePaths } from "./routes.js";
 import { todoState } from "./state.js";
 import { loadTodos, saveTodos } from "./storage.js";

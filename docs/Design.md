@@ -1,3 +1,6 @@
+> **Warning:** This file contains early design ideas and may not match the current HHT.js API.
+> See [`documentation.md`](documentation.md) for the current user documentation.
+
 # hht.js Design Overview
 
 ## Goal

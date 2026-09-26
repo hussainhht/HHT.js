@@ -1,4 +1,4 @@
-import { state } from "../framework/store.js";
+import { state } from "../framework/index.js";
 
 export const appState = state({ title: "Hello HHT.js", message: "" });
 export const counterState = state({ count: 0 });

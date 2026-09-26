@@ -1,4 +1,4 @@
-import { createElement } from "../framework/dom.js";
+import { createElement } from "../framework/index.js";
 import { increaseCount, decreaseCount, resetCount, setMessage } from "./actions.js";
 import { routePaths } from "./routes.js";
 import { appState, counterState } from "./state.js";
