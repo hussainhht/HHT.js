@@ -87,12 +87,12 @@ export function createTodoList(items = []) {
   return createElement("ul", { class: "todo-list" }, items);
 }
 
-// Double-click on the label starts editing. Rendering is synchronous, so once
-// startEditing returns the row already has `.editing`, the edit input is
-// visible, and it can take focus.
-function handleLabelDblclick(event, id) {
-  startEditing(id);
-  event.target.closest("li").querySelector(".edit").focus();
+// Used as the edit input's `ref` only while its todo is being edited. When
+// editing starts, the ref changes from null to this function, so HHT.js calls
+// it with the input once the row is rendered with `.editing` (input visible).
+// When editing ends it is called with null, which does nothing.
+function focusElement(element) {
+  element?.focus();
 }
 
 // Enter saves, Escape cancels. `isComposing` is skipped for the same reason
@@ -122,7 +122,9 @@ export function createTodoItem(todo, isEditing = false) {
   const classes = [todo.completed && "completed", isEditing && "editing"]
     .filter(Boolean)
     .join(" ");
-  return createElement("li", { "data-id": todo.id, class: classes || null }, [
+  // `key` lets the renderer keep each row's DOM element with its todo when
+  // todos are removed, filtered or reordered. It is not rendered.
+  return createElement("li", { key: todo.id, "data-id": todo.id, class: classes || null }, [
     createElement("div", { class: "view" }, [
       createElement("input", {
         class: "toggle",
@@ -132,7 +134,7 @@ export function createTodoItem(todo, isEditing = false) {
       }),
       createElement(
         "label",
-        { onDblclick: (event) => handleLabelDblclick(event, todo.id) },
+        { onDblclick: () => startEditing(todo.id) },
         [todo.text],
       ),
       createElement("button", {
@@ -144,6 +146,7 @@ export function createTodoItem(todo, isEditing = false) {
     // was cancelled is reset because the render syncs `value` back.
     createElement("input", {
       class: "edit",
+      ref: isEditing ? focusElement : null,
       value: todo.text,
       onKeydown: (event) => handleEditKeydown(event, todo.id),
       onBlur: (event) => handleEditBlur(event, todo.id),

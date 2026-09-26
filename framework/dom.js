@@ -8,6 +8,61 @@ function normalizeChildren(children) {
   return list.flat(Infinity).filter((child) => child != null && typeof child !== "boolean");
 }
 
+// `key` identifies an element among its siblings. It is only read by the
+// renderer and never becomes a DOM attribute. Text children have no key.
+function getKey(child) {
+  return typeof child === "object" ? child.attrs?.key : undefined;
+}
+
+// Keys are compared like Map keys, so 1 and "1" are different keys.
+function checkUniqueKeys(children) {
+  const seen = new Set();
+  for (const child of children) {
+    const key = getKey(child);
+    if (key == null) continue;
+    if (seen.has(key)) {
+      throw new Error(`HHT.js: Duplicate key "${String(key)}" found among sibling elements.`);
+    }
+    seen.add(key);
+  }
+}
+
+// `ref` is a callback that receives the real element. Like `key`, it is read
+// by the renderer and never becomes a DOM attribute.
+function checkRef(ref) {
+  if (ref != null && typeof ref !== "function") {
+    throw new Error("HHT.js: ref must be a function, null, or undefined.");
+  }
+}
+
+// Ref calls are collected while the DOM is built or patched, and run when
+// render(), mount() or unmount() has finished, so a ref always sees its
+// element in place. All ref(null) cleanups run before the new ref(element)
+// calls, so a callback moved from an old element to a new one ends up with
+// the new one.
+let refCleanups = [];
+let refAssignments = [];
+
+function resetRefs() {
+  refCleanups = [];
+  refAssignments = [];
+}
+
+function flushRefs() {
+  const cleanups = refCleanups;
+  const assignments = refAssignments;
+  resetRefs();
+  for (const ref of cleanups) ref(null);
+  for (const [ref, element] of assignments) ref(element);
+}
+
+// Queues ref(null) for every ref in a removed tree, children before parents.
+function releaseRefs(tree) {
+  if (typeof tree !== "object") return;
+  for (const child of tree.children) releaseRefs(child);
+  if (tree.attrs.ref) refCleanups.push(tree.attrs.ref);
+}
+
 function removeDomAttribute(element, name) {
   if (booleanAttributes.has(name) && name in element) element[name] = false;
   if (name === "value" && "value" in element) element.value = "";
@@ -31,10 +86,13 @@ function setDomAttribute(element, name, value) {
 }
 
 export function createElement(tag, attrs = {}, children = []) {
+  checkRef(attrs?.ref);
+  const normalized = normalizeChildren(children);
+  checkUniqueKeys(normalized);
   return {
     tag,
     attrs,
-    children: normalizeChildren(children),
+    children: normalized,
   };
 }
 
@@ -46,6 +104,7 @@ export function renderElement(node) {
   const element = document.createElement(node.tag);
 
   for (const [name, value] of Object.entries(node.attrs)) {
+    if (name === "key" || name === "ref") continue;
     if (isEvent(name)) {
       addEvent(element, name, value);
     } else {
@@ -57,20 +116,41 @@ export function renderElement(node) {
     element.appendChild(renderElement(child));
   }
 
+  if (node.attrs.ref) refAssignments.push([node.attrs.ref, element]);
+
   return element;
 }
 
+// A target is a CSS selector or a DOM element. Either way the result is the
+// element itself, so render history (mountedTrees) is kept per element: "#app"
+// and document.querySelector("#app") are the same root.
 function getRoot(target) {
-  const root = document.querySelector(target);
+  if (typeof target === "string") {
+    let root;
+    try {
+      root = document.querySelector(target);
+    } catch {
+      throw new Error(`HHT.js: Mount target "${target}" is not a valid CSS selector.`);
+    }
 
-  if (!root) {
-    throw new Error(`HHT.js: Mount target "${target}" was not found.`);
+    if (!root) {
+      throw new Error(`HHT.js: Mount target "${target}" was not found.`);
+    }
+
+    return root;
   }
 
-  return root;
+  // nodeType 1 = element. Checked by value (not `instanceof Element`) so
+  // elements from other frames work too.
+  if (target !== null && typeof target === "object" && target.nodeType === 1) {
+    return target;
+  }
+
+  throw new Error("HHT.js: Mount target must be a CSS selector string or a DOM element.");
 }
 
-function replaceNode(parent, currentNode, nextTree) {
+function replaceNode(parent, currentNode, previousTree, nextTree) {
+  releaseRefs(previousTree);
   const nextNode = renderElement(nextTree);
   parent.replaceChild(nextNode, currentNode);
   return nextNode;
@@ -78,7 +158,7 @@ function replaceNode(parent, currentNode, nextTree) {
 
 function updateAttributes(element, previous = {}, next = {}) {
   for (const [name, value] of Object.entries(previous)) {
-    if (Object.hasOwn(next, name)) continue;
+    if (name === "key" || name === "ref" || Object.hasOwn(next, name)) continue;
 
     if (isEvent(name)) {
       element.removeEventListener(name.slice(2).toLowerCase(), value);
@@ -88,6 +168,7 @@ function updateAttributes(element, previous = {}, next = {}) {
   }
 
   for (const [name, value] of Object.entries(next)) {
+    if (name === "key" || name === "ref") continue;
     const oldValue = previous[name];
     if (oldValue === value) {
       if (name === "value" && "value" in element && element.value !== (value == null ? "" : String(value))) {
@@ -109,7 +190,63 @@ function updateAttributes(element, previous = {}, next = {}) {
   }
 }
 
+// Moves an existing child. moveBefore() (in newer browsers) keeps focus and
+// other element state; insertBefore() is the fallback everywhere else.
+function moveNode(parent, node, reference) {
+  if (typeof parent.moveBefore === "function" && node.isConnected) {
+    parent.moveBefore(node, reference);
+  } else {
+    parent.insertBefore(node, reference);
+  }
+}
+
+// Keyed lists: match old and new children by key instead of by position.
+// Removed keys are dropped first, so deleting an item never moves the items
+// around it; then each new child is patched (same key) or created (new key)
+// and moved into place only if it is not already there.
+function patchKeyedChildren(element, previous, next) {
+  const oldByKey = new Map();
+  previous.forEach((tree, index) => {
+    oldByKey.set(getKey(tree), { tree, node: element.childNodes[index] });
+  });
+
+  const nextKeys = new Set(next.map(getKey));
+  for (const [key, old] of oldByKey) {
+    if (!nextKeys.has(key)) {
+      releaseRefs(old.tree);
+      element.removeChild(old.node);
+      oldByKey.delete(key);
+    }
+  }
+
+  next.forEach((nextTree, index) => {
+    const old = oldByKey.get(getKey(nextTree));
+    const node = old
+      ? patchNode(element, old.node, old.tree, nextTree)
+      : renderElement(nextTree);
+    const current = element.childNodes[index];
+
+    if (current === node) return;
+    if (!current) element.appendChild(node);
+    else if (old) moveNode(element, node, current);
+    else element.insertBefore(node, current);
+  });
+}
+
+// A child list is keyed only if every child, old and new, has a key.
+// Otherwise the whole list is compared by position, as before.
+function isKeyedList(previous, next) {
+  const all = [...previous, ...next];
+  return all.length > 0 && all.every((child) => getKey(child) != null);
+}
+
 function patchChildren(element, previous = [], next = []) {
+  if (isKeyedList(previous, next)) {
+    patchKeyedChildren(element, previous, next);
+    return;
+  }
+
+  previous.slice(next.length).forEach(releaseRefs);
   while (element.childNodes.length > next.length) {
     element.removeChild(element.childNodes[element.childNodes.length - 1]);
   }
@@ -136,26 +273,38 @@ function patchNode(parent, currentNode, previousTree, nextTree) {
   }
 
   if (previousIsText || nextIsText) {
-    return replaceNode(parent, currentNode, nextTree);
+    return replaceNode(parent, currentNode, previousTree, nextTree);
   }
 
   if (previousTree.tag.toLowerCase() !== nextTree.tag.toLowerCase()) {
-    return replaceNode(parent, currentNode, nextTree);
+    return replaceNode(parent, currentNode, previousTree, nextTree);
   }
 
   updateAttributes(currentNode, previousTree.attrs, nextTree.attrs);
   patchChildren(currentNode, previousTree.children, nextTree.children);
+
+  // Same element kept: refs are only called if the callback itself changed.
+  const previousRef = previousTree.attrs.ref;
+  const nextRef = nextTree.attrs.ref;
+  if (previousRef !== nextRef) {
+    if (previousRef) refCleanups.push(previousRef);
+    if (nextRef) refAssignments.push([nextRef, currentNode]);
+  }
   return currentNode;
 }
 
 export function mount(target, node) {
-  getRoot(target).appendChild(renderElement(node));
+  const root = getRoot(target);
+  resetRefs();
+  root.appendChild(renderElement(node));
+  flushRefs();
 }
 
 export function render(target, node) {
   const root = getRoot(target);
   const previousTree = mountedTrees.get(root);
   const currentNode = root.firstChild ?? root.childNodes[0];
+  resetRefs();
 
   if (previousTree && currentNode) {
     patchNode(root, currentNode, previousTree, node);
@@ -163,8 +312,25 @@ export function render(target, node) {
       root.removeChild(root.childNodes[root.childNodes.length - 1]);
     }
   } else {
+    // The old content was removed from outside HHT.js: release its refs.
+    if (previousTree) releaseRefs(previousTree);
     root.replaceChildren(renderElement(node));
   }
 
   mountedTrees.set(root, node);
+  flushRefs();
+}
+
+// Empties the root (whether its content came from render() or mount()) and
+// forgets its previous tree, so the next render() starts fresh. Refs in the
+// rendered tree are called with null. The root element itself stays in the
+// page. Safe to call on an empty root.
+export function unmount(target) {
+  const root = getRoot(target);
+  const previousTree = mountedTrees.get(root);
+  resetRefs();
+  if (previousTree) releaseRefs(previousTree);
+  root.replaceChildren();
+  mountedTrees.delete(root);
+  flushRefs();
 }

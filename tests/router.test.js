@@ -61,3 +61,35 @@ test("unknown hash routes show the built-in 404 view without redirecting", () =>
     globalThis.window = originalWindow;
   }
 });
+
+test("router.subscribe returns an unsubscribe function", () => {
+  const originalWindow = globalThis.window;
+  globalThis.window = createWindow("#/");
+
+  try {
+    const router = createRouter();
+    router.register("/").register("/active").register("/completed");
+    const seenA = [];
+    const seenB = [];
+    const unsubscribeA = router.subscribe((path) => seenA.push(path));
+    const unsubscribeB = router.subscribe((path) => seenB.push(path));
+    assert.equal(typeof unsubscribeA, "function");
+
+    router.start();
+    router.navigate("/active");
+    assert.deepEqual(seenA, ["/", "/active"]);
+
+    unsubscribeA();
+    unsubscribeA();
+    router.navigate("/completed");
+    window.location.hash = "#/";
+
+    assert.deepEqual(seenA, ["/", "/active"], "no changes after unsubscribe");
+    assert.deepEqual(seenB, ["/", "/active", "/completed", "/"]);
+    assert.equal(router.getCurrentRoute(), "/", "routing itself is unaffected");
+
+    unsubscribeB();
+  } finally {
+    globalThis.window = originalWindow;
+  }
+});

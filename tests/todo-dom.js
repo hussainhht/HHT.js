@@ -47,6 +47,15 @@ function createDocument(root) {
         child.parentNode = this;
         return child;
       };
+      // Like the DOM: a node that is already a child is moved, not copied.
+      element.insertBefore = function (child, reference) {
+        const from = this.childNodes.indexOf(child);
+        if (from !== -1) this.childNodes.splice(from, 1);
+        const to = reference == null ? this.childNodes.length : this.childNodes.indexOf(reference);
+        this.childNodes.splice(to, 0, child);
+        child.parentNode = this;
+        return child;
+      };
       element.closest = function (selector) {
         let node = this;
         while (node && !matches(node, selector)) node = node.parentNode;

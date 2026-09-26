@@ -7,6 +7,7 @@ import {
   mount,
   render,
   state,
+  unmount,
 } from "../framework/index.js";
 import * as dom from "../framework/dom.js";
 import * as router from "../framework/router.js";
@@ -19,6 +20,7 @@ test("the entry point exports exactly the public API", () => {
     "mount",
     "render",
     "state",
+    "unmount",
   ]);
   for (const [name, value] of Object.entries(hht)) {
     assert.equal(typeof value, "function", name);
@@ -30,6 +32,7 @@ test("the entry point re-exports the implementation, not copies", () => {
   assert.equal(createElement, dom.createElement);
   assert.equal(render, dom.render);
   assert.equal(mount, dom.mount);
+  assert.equal(unmount, dom.unmount);
   assert.equal(state, store.state);
   assert.equal(createRouter, router.createRouter);
 });

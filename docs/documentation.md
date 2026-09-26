@@ -25,13 +25,14 @@ The TodoMVC app in `todo/` is built entirely with HHT.js and is the best larger 
 9. [State](#state)
 10. [Rendering](#rendering)
 11. [Connecting state to rendering](#connecting-state-to-rendering)
-12. [How rendering works](#how-rendering-works)
-13. [Routing](#routing)
-14. [Why HHT.js is a framework](#why-hhtjs-is-a-framework)
-15. [Complete example: counter](#complete-example-counter)
-16. [Complete example: pages with routing](#complete-example-pages-with-routing)
-17. [API reference](#api-reference)
-18. [Current limitations](#current-limitations)
+12. [Element refs](#element-refs)
+13. [How rendering works](#how-rendering-works)
+14. [Routing](#routing)
+15. [Why HHT.js is a framework](#why-hhtjs-is-a-framework)
+16. [Complete example: counter](#complete-example-counter)
+17. [Complete example: pages with routing](#complete-example-pages-with-routing)
+18. [API reference](#api-reference)
+19. [Current limitations](#current-limitations)
 
 ---
 
@@ -74,6 +75,7 @@ import {
   createElement,
   render,
   mount,
+  unmount,
   state,
   createRouter,
 } from "./framework/index.js";
@@ -88,6 +90,7 @@ The path is relative to **your** file. The examples in this guide assume your Ja
 | `createElement` | Describe an element ([Creating elements](#creating-elements)) |
 | `render` | Show and update your app on the page ([Rendering](#rendering)) |
 | `mount` | Insert content once, without updates ([Rendering](#rendering)) |
+| `unmount` | Clear a container and forget what was rendered there ([Rendering](#unmounttarget--clear-a-container)) |
 | `state` | Create a piece of state ([State](#state)) |
 | `createRouter` | Create a hash router ([Routing](#routing)) |
 
@@ -97,8 +100,8 @@ You don't need to know this to use HHT.js. `index.js` only re-exports functions 
 
 | File | Contains |
 | --- | --- |
-| `framework/index.js` | The public API: the five functions above |
-| `framework/dom.js` | Virtual nodes, rendering and the diff (`createElement`, `render`, `mount`) |
+| `framework/index.js` | The public API: the six functions above |
+| `framework/dom.js` | Virtual nodes, rendering and the diff (`createElement`, `render`, `mount`, `unmount`) |
 | `framework/store.js` | State (`state`) |
 | `framework/router.js` | The hash router (`createRouter`) |
 | `framework/events.js` | Turns `on…` attributes into event listeners, used by `dom.js` |
@@ -146,7 +149,7 @@ createElement(tag, attrs, children)
 | Parameter    | Type                      | Default    | Meaning                                                                |
 | ------------ | ------------------------- | ---------- | ---------------------------------------------------------------------- |
 | `tag`      | string                    | (required) | The HTML tag name, e.g.`"div"`, `"button"`, `"input"`            |
-| `attrs`    | object                    | `{}`     | Attributes and event handlers, e.g.`{ class: "title", onClick: fn }` |
+| `attrs`    | object                    | `{}`     | Attributes, event handlers, and the reserved `key` / `ref`, e.g.`{ class: "title", onClick: fn }` |
 | `children` | array (or a single child) | `[]`     | What goes inside the element: text, numbers, other elements            |
 
 **Returns:** a *virtual node*: a plain JavaScript object that **describes** an element. It is not a real DOM element yet and nothing appears on the page until you pass it to [`render()`](#rendering).
@@ -272,6 +275,22 @@ Style **objects** (`style: { color: "red" }`) are not supported: they produce `s
 
 Any attribute name that starts with `on` is treated as an **event handler**, not an attribute. See [Events](#events).
 
+### Reserved attributes: `key` and `ref`
+
+Two attribute names are used by HHT.js itself. Neither is ever added to the real element:
+
+| Attribute | Purpose |
+| --- | --- |
+| `key` | Identity in a list: tells the renderer which item an element represents |
+| `ref` | Access to the real element: a function HHT.js calls with the element |
+
+```js
+createElement("li", { key: item.id, ref: saveItem, class: "item" }, [item.name]);
+// <li class="item">…</li>   (no key="…" or ref="…" in the HTML)
+```
+
+For `key`, use a string or a number that stays the same for the same item (an ID, not the position in the array). See [Keyed lists](#keyed-lists-matched-by-key). For `ref`, see [Element refs](#element-refs).
+
 ---
 
 ## Children and nesting
@@ -353,6 +372,14 @@ You can also pass the mapped array as the children argument itself:
 
 ```js
 createElement("ul", {}, todos.map((text) => createElement("li", {}, [text])));
+```
+
+For lists whose items can be added, removed or reordered, give each item a `key` (see [Keyed lists](#keyed-lists-matched-by-key)). With todo objects like `{ id, text }`:
+
+```js
+const items = todos.map((todo) =>
+  createElement("li", { key: todo.id }, [todo.text]),
+);
 ```
 
 ### Conditional children
@@ -490,635 +517,6 @@ When the page is rendered again (see [Rendering](#rendering)), HHT.js compares e
 - Events can only be attached to elements you create with `createElement`. Listening on `window` or `document` (for example global keyboard shortcuts) is not handled by HHT.js; use the browser's `window.addEventListener()` for that.
 - There is no way to pass listener options such as `once`, `capture` or `passive`.
 
-You are working on my `HHT.js` mini-framework project.
-
-Your task is to write real user documentation that matches the framework's ACTUAL implementation.
-
-Do not redesign the framework.
-Do not implement new features.
-Do not document planned features as if they already exist.
-
-The source code is the source of truth.
-
-# Goal
-
-Create a clear Markdown documentation file that allows a completely new user to use HHT.js without reading the framework source code.
-
-Create or replace:
-
-```text
-docs/documentation.md
-```
-
-# Step 1 — Inspect the real framework first
-
-Before writing documentation, read:
-
-```text
-framework/
-todo/
-tests/
-README.md
-docs/
-package.json
-index.html
-```
-
-Pay special attention to:
-
-```text
-framework/dom.js
-framework/events.js
-framework/store.js
-framework/router.js
-```
-
-Also inspect how TodoMVC actually uses the framework.
-
-Do not assume the API from `docs/Design.md` is correct.
-
-If `Design.md` says something exists but the source code does not implement it, document the real implementation instead.
-
-For example, verify whether these actually exist before documenting them:
-
-```js
-hht.div()
-hht.button()
-hht.state()
-hht.router()
-```
-
-Do not document them if they do not exist.
-
-# Step 2 — Discover the actual public API
-
-Find every function that a framework user is actually expected to use.
-
-For each public API function, document:
-
-- Function name
-- Import path
-- Parameters
-- Return value
-- What it does
-- A working example
-- Important limitations or behavior
-
-Expected areas include:
-
-```text
-DOM
-State
-Events
-Rendering
-Routing
-```
-
-But use the real names found in the source code.
-
-# Step 3 — Explain how to install and run the project
-
-Add a section explaining how a user can run the project from the root folder.
-
-Inspect `package.json` and use the actual commands.
-
-Example structure:
-
-```md
-## Installation
-
-```bash
-npm install
-```
-
-## Running the project
-
-```bash
-npm run dev
-```
-
-```
-
-Only include commands that really exist.
-
-# Step 4 — Explain importing HHT.js
-
-Show the actual import syntax currently required by the project.
-
-Do not invent a single `hht` object unless one actually exists.
-
-For example, if the real API currently requires:
-
-```js
-import { createElement, render } from "./framework/dom.js";
-import { state } from "./framework/store.js";
-import { createRouter } from "./framework/router.js";
-```
-
-then document that exact API.
-
-# Step 5 — Document DOM creation
-
-Explain how to create an element.
-
-Use the actual `createElement()` signature.
-
-Explain:
-
-- tag
-- attributes
-- children
-
-Include a simple example such as:
-
-```js
-const title = createElement(
-  "h1",
-  { class: "title" },
-  ["Hello"]
-);
-```
-
-Make sure every example is valid with the current implementation.
-
-# Step 6 — Document attributes
-
-Explain how attributes are passed.
-
-Include examples for supported attributes such as:
-
-```text
-class
-id
-type
-placeholder
-value
-checked
-disabled
-```
-
-Clearly mention any important implementation limitations.
-
-Do not claim that unsupported features work.
-
-# Step 7 — Document child elements
-
-Explain:
-
-- text children
-- number children
-- nested elements
-- arrays of children
-- conditional children
-- null / undefined / boolean behavior
-
-Use examples that match the actual implementation.
-
-Example:
-
-```js
-createElement("div", {}, [
-  createElement("h1", {}, ["Todos"]),
-  createElement("p", {}, ["Welcome"])
-]);
-```
-
-Explain the structure clearly for a beginner.
-
-# Step 8 — Document events
-
-Explain how HHT.js users declare events.
-
-Use the real `on*` attribute system.
-
-Example:
-
-```js
-createElement(
-  "button",
-  {
-    onClick: () => {
-      console.log("Clicked");
-    }
-  },
-  ["Click me"]
-);
-```
-
-Explain that HHT.js internally handles the native browser event listener.
-
-Explain that handlers receive the native event object:
-
-```js
-createElement(
-  "input",
-  {
-    onInput: (event) => {
-      console.log(event.target.value);
-    }
-  }
-);
-```
-
-Document only event names that the current implementation actually supports.
-
-If there are naming limitations such as `onDblClick` instead of `onDoubleClick`, explain them honestly.
-
-# Step 9 — Document state management
-
-Explain the actual state API.
-
-Include:
-
-```js
-const count = state(0);
-```
-
-Reading:
-
-```js
-count.get();
-```
-
-Updating:
-
-```js
-count.set(1);
-```
-
-Updater functions:
-
-```js
-count.set(current => current + 1);
-```
-
-Subscriptions:
-
-```js
-count.subscribe(value => {
-  console.log(value);
-});
-```
-
-If subscriptions currently cannot be removed, say so clearly.
-
-Do not document unsubscribe until it actually exists.
-
-# Step 10 — Explain state and rendering correctly
-
-This is very important.
-
-Do NOT claim that calling:
-
-```js
-state.set(...)
-```
-
-automatically updates the DOM unless the framework itself actually does that.
-
-Explain the real flow.
-
-For example, if the current architecture requires:
-
-```js
-function renderApp() {
-  render("#app", App());
-}
-
-count.subscribe(renderApp);
-```
-
-then show that.
-
-Explain the actual architecture:
-
-```text
-event
-  ↓
-state.set()
-  ↓
-subscriber runs
-  ↓
-new virtual DOM tree is created
-  ↓
-render() compares old and new trees
-  ↓
-real DOM is patched
-```
-
-Explain that HHT.js currently uses a small Virtual DOM and index-based diffing if that is still true in the source code.
-
-# Step 11 — Document rendering
-
-Explain the actual difference between:
-
-```text
-mount()
-render()
-renderElement()
-```
-
-if they are public.
-
-Do not hide confusing behavior.
-
-If `mount()` appends while `render()` manages updates, explain it.
-
-If one function is intended mainly as an internal helper, make that clear.
-
-Show the recommended way a user should render an application based on how the current TodoMVC works.
-
-# Step 12 — Document routing
-
-Explain the real routing API.
-
-Use the actual `createRouter()` implementation.
-
-Show how to:
-
-- create a router
-- register routes
-- start the router
-- navigate
-- get the current route
-- react to route changes
-- render a view for a route
-
-Example only if it matches the current implementation:
-
-```js
-const router = createRouter();
-
-router.register("/");
-router.register("/active");
-router.register("/completed");
-
-router.start();
-```
-
-Show actual hash URLs such as:
-
-```text
-#/
-#/active
-#/completed
-```
-
-Do not document route parameters if they are not implemented.
-
-# Step 13 — Explain the Virtual DOM
-
-Add a beginner-friendly section:
-
-```md
-## How Rendering Works
-```
-
-Explain that HHT.js uses JavaScript objects to represent elements before creating/updating the real DOM.
-
-Example:
-
-```js
-createElement("p", {}, ["Hello"]);
-```
-
-conceptually produces something like:
-
-```js
-{
-  tag: "p",
-  attrs: {},
-  children: ["Hello"]
-}
-```
-
-Then explain:
-
-```text
-Virtual DOM tree
-      ↓
-render()
-      ↓
-compare with previous tree
-      ↓
-update only necessary real DOM parts
-```
-
-Keep this explanation simple.
-
-# Step 14 — Explain inversion of control
-
-The original project asks users to understand why a framework is different from a library.
-
-Add a section:
-
-```md
-## Why HHT.js Is a Framework
-```
-
-Explain inversion of control using HHT.js.
-
-For example:
-
-Instead of application code manually changing DOM elements everywhere, the application describes the UI and provides event handlers/state updates, while HHT.js decides how to create and patch the DOM.
-
-Do not overclaim automatic behavior the framework does not have.
-
-# Step 15 — Build one complete small example
-
-Add a complete counter example that uses only the real HHT.js API.
-
-The example should demonstrate:
-
-- creating elements
-- attributes
-- nested elements
-- events
-- state
-- state updates
-- subscription
-- rendering
-
-Example behavior:
-
-```text
-Counter: 0
-
-[ - ] [ Reset ] [ + ]
-```
-
-A user should be able to copy the example into the project and run it.
-
-Verify the code against the actual implementation before including it.
-
-# Step 16 — Add a routing example
-
-Create another small example demonstrating:
-
-```text
-Home
-About
-```
-
-or similar.
-
-Show:
-
-```text
-route registration
-navigation
-rendering based on the current route
-```
-
-Again, use only APIs that really exist.
-
-# Step 17 — Add API Reference
-
-At the end create:
-
-```md
-## API Reference
-```
-
-Use a table like:
-
-```md
-| API | Purpose |
-|---|---|
-| `createElement()` | Creates a virtual DOM node |
-| `render()` | Renders or patches a tree into the page |
-| `state()` | Creates application state |
-| `createRouter()` | Creates a hash router |
-```
-
-Use the complete real public API.
-
-# Step 18 — Add Current Limitations
-
-Create:
-
-```md
-## Current Limitations
-```
-
-Document important current limitations honestly.
-
-Examples, only if still true:
-
-- children are diffed by index instead of keys;
-- subscriptions cannot currently be removed;
-- `render()` expects a CSS selector;
-- style objects are not supported;
-- global `window` events are not handled by the framework;
-- route parameters are not supported.
-
-This section is important because users should not have to discover limitations by reading source code.
-
-# Step 19 — Remove documentation lies
-
-Review:
-
-```text
-README.md
-docs/Design.md
-docs/documentation.md
-```
-
-Do not modify the source code.
-
-The main task is `docs/documentation.md`.
-
-However, if `docs/Design.md` contains old planned APIs that conflict with the real framework, add a clear warning at the top of `Design.md`:
-
-```md
-> This file contains early design ideas and may not match the current HHT.js API.
-> See `documentation.md` for the current user documentation.
-```
-
-Do not rewrite the entire design file unless necessary.
-
-# Documentation Style
-
-Write for someone who knows basic JavaScript but has never used HHT.js.
-
-Use:
-
-- simple English
-- short explanations
-- working code examples
-- clear headings
-- small diagrams where useful
-
-Do not use unnecessarily complicated terminology without explaining it.
-
-When introducing terms such as:
-
-```text
-Virtual DOM
-state
-subscription
-routing
-inversion of control
-```
-
-explain them in beginner-friendly language.
-
-# Important Rules
-
-1. The source code is the source of truth.
-2. Every code example must work with the current implementation.
-3. Do not document planned features as existing features.
-4. Do not change framework behavior.
-5. Do not add new framework features.
-6. Do not install packages.
-7. Do not rename APIs.
-8. Do not redesign the architecture.
-9. Do not hide current limitations.
-10. Do not copy examples from `Design.md` without verifying them.
-11. Prefer examples taken from or validated against the existing TodoMVC/tests.
-12. Keep documentation consistent from beginning to end.
-
-# Validation
-
-After writing the documentation:
-
-1. Run the existing test suite.
-2. Confirm all tests still pass.
-3. Review every code example in `docs/documentation.md`.
-4. Verify each function/import exists.
-5. Verify every claimed behavior exists.
-6. Search the documentation for stale APIs such as:
-
-```text
-hht.div
-hht.button
-hht.input
-hht.state
-hht.router
-createState
-function children
-route parameters
-```
-
-If any of those are not implemented, they must not be presented as working APIs.
-
-# Final Output
-
-Create:
-
-```text
-docs/documentation.md
-```
-
-Do not modify framework source files.
-
-In your final response give me:
-
-- the file created or updated;
-- the sections added;
-- any documentation/API mismatch you found;
-- whether all existing tests still pass.
-
 ---
 
 ## State
@@ -1173,7 +571,38 @@ Details worth knowing:
 
 - Listeners run **immediately and synchronously**, inside `set()`, in the order you subscribed them.
 - Listeners run on **every** `set()`, even when the new value is the same as the old one.
-- **Subscriptions cannot be removed.** `subscribe()` returns nothing. Subscribe once, at start-up, for things that live as long as the page.
+
+### Stopping a subscription: the unsubscribe function
+
+`subscribe()` returns a **cleanup function**. Call it when you no longer want updates, and that listener is removed:
+
+```js
+const unsubscribe = count.subscribe((value) => {
+  console.log(value);
+});
+
+count.set(1); // logs 1
+unsubscribe();
+count.set(2); // logs nothing
+```
+
+- Each call removes **only its own** subscription; other listeners keep running, in their original order.
+- Calling it **more than once is safe**; after the first call it does nothing.
+- Every `subscribe()` call is a separate subscription, even if you pass the same function twice. Each one has its own unsubscribe function.
+
+You don't have to unsubscribe everything. A subscription that should last as long as the page, like `todoState.subscribe(renderApp)` in TodoMVC, can simply be left alone. Unsubscribe when something shorter-lived stops needing updates, for example a view you are removing from the page.
+
+**Subscribing or unsubscribing while `set()` is notifying.** A listener may subscribe or unsubscribe listeners (including itself) while it is being called. The rules are:
+
+- a listener removed during an update is **not called** for the rest of that update, or ever again;
+- a listener added during an update is first called on the **next** `set()`;
+- all other listeners still run, in order. None are skipped.
+
+```js
+const unsubscribe = count.subscribe((value) => {
+  if (value >= 3) unsubscribe(); // stop listening once we reach 3
+});
+```
 
 ### Any kind of value
 
@@ -1246,14 +675,40 @@ render("#app", createElement("h1", {}, ["Hello"]));
 
 | Parameter  | Meaning                                                                                               |
 | ---------- | ----------------------------------------------------------------------------------------------------- |
-| `target` | A**CSS selector string** for the container, e.g. `"#app"`. It must already exist in the page. |
+| `target` | The container: a **CSS selector string** such as `"#app"`, **or a DOM element**. |
 | `vnode`  | **One** virtual node, the root of what you want to show.                                        |
 
 What it does:
 
 - **First call for a target:** builds the real elements and puts them inside the container, **replacing anything that was there before**.
 - **Every later call for the same target:** compares the new virtual node with the previous one and changes **only what is different** on the real page. Elements that did not change are kept, so an input keeps its focus, cursor position and typed text.
-- If the selector matches nothing, it throws `HHT.js: Mount target "#app" was not found.`
+
+#### Selector or element
+
+Both of these work, and they mean the same thing:
+
+```js
+render("#app", App());
+```
+
+```js
+const app = document.querySelector("#app");
+render(app, App());
+```
+
+HHT.js remembers the previous tree **per element**, not per selector. So `render("#app", …)` followed by `render(app, …)` is treated as the same container and diffed normally.
+
+Passing an element is useful when you already have one, for example a container you created yourself. It does not even need to be in the page yet.
+
+If the target is wrong, you get an HHT.js error:
+
+| Target | Error |
+| --- | --- |
+| A selector that matches nothing | `HHT.js: Mount target "#app" was not found.` |
+| A string that is not a valid selector (e.g. `"###"`) | `HHT.js: Mount target "###" is not a valid CSS selector.` |
+| Anything else (`null`, a number, a plain object, a text node, …) | `HHT.js: Mount target must be a CSS selector string or a DOM element.` |
+
+The same rules apply to `mount()` and `unmount()`.
 
 `render()` takes a single root. To show several things side by side, wrap them in one element (TodoMVC wraps its app and info footer in a `div`):
 
@@ -1264,11 +719,28 @@ render("#app", createElement("div", {}, [
 ]));
 ```
 
-You can render into several different containers; each one remembers its own previous tree:
+#### Several render roots
+
+A page can have several containers, each rendered separately:
+
+```html
+<div id="hud"></div>
+<div id="game"></div>
+```
 
 ```js
-render("#header", Header());
-render("#main", Main());
+render("#hud", Hud());
+render("#game", Game());
+```
+
+- Each target keeps **its own** previous Virtual DOM tree.
+- Rendering one target only compares and updates that target. `render("#hud", Hud())` never looks at `#game`.
+
+This lets you update one part of a page without rebuilding and comparing the rest. You still decide what re-renders when: subscribe each region's render function to the state it uses. HHT.js does **not** work out these dependencies for you.
+
+```js
+lives.subscribe(() => render("#hud", Hud()));
+board.subscribe(() => render("#game", Game()));
 ```
 
 ### `mount(target, vnode)` — one-time insert only
@@ -1279,12 +751,52 @@ import { createElement, mount } from "./framework/index.js";
 mount("#app", createElement("p", {}, ["Static content"]));
 ```
 
+`target` works exactly like `render()`'s: a selector or an element.
+
 `mount()` builds the elements and **appends** them to the container. It does not remember what it inserted, so:
 
 - calling `mount()` again adds a **second copy**;
 - a later `render()` on the same container ignores what `mount()` put there and replaces it.
 
 Use `mount()` only for content that never changes. For anything that updates, use `render()` from the start. The TodoMVC app only uses `render()`.
+
+### `unmount(target)` — clear a container
+
+```js
+import { unmount } from "./framework/index.js";
+
+unmount("#app");
+```
+
+```js
+const app = document.querySelector("#app");
+unmount(app);
+```
+
+`unmount()`:
+
+- **removes everything inside** the container, whether it came from `render()` or `mount()`;
+- **forgets the previous tree** HHT.js stored for it, so the next `render()` on that container is a fresh first render (everything is built new, nothing is compared with the old content);
+- **leaves the container itself** in the page: `<div id="app"><h1>Hello</h1></div>` becomes `<div id="app"></div>`;
+- is safe to call on an empty container, or more than once;
+- does not affect any other container.
+
+It returns nothing. Use it when switching a region to something completely different, or when a region is no longer needed:
+
+```js
+unmount("#lobby");
+render("#game", Game());
+```
+
+`unmount()` does not remove subscriptions. If a subscription still calls `render()` on that container, the content comes back on the next update. Call the function `subscribe()` returned as well (see [Stopping a subscription](#stopping-a-subscription-the-unsubscribe-function)):
+
+```js
+const stopLobby = lobbyState.subscribe(() => render("#lobby", Lobby()));
+
+// leaving the lobby:
+stopLobby();
+unmount("#lobby");
+```
 
 ### `renderElement(vnode)`: internal
 
@@ -1347,14 +859,7 @@ render() compares it with the previous tree
 only the changed parts of the real page are updated
 ```
 
-All of this happens synchronously: when `set()` returns, the page is already up to date. TodoMVC relies on this to focus the edit box right after entering edit mode:
-
-```js
-function handleLabelDblclick(event, id) {
-  startEditing(id); // calls todoState.set(...) → page re-renders immediately
-  event.target.closest("li").querySelector(".edit").focus();
-}
-```
+All of this happens synchronously: when `set()` returns, the page is already up to date.
 
 Each `set()` causes one full render. If a handler calls `set()` three times, the page renders three times. Where possible, make one `set()` with an updater that does all the changes.
 
@@ -1390,6 +895,93 @@ createElement("input", {
 ```
 
 On every render, HHT.js sets the input back to the `value` you passed if the two differ. So if you pass `value` but **don't** update the state in `onInput`, the next render (caused by anything) resets what the user typed. The same applies to `checked` on checkboxes.
+
+---
+
+## Element refs
+
+Sometimes you need the **real** DOM element that HHT.js created: to call `focus()` on it, to measure it, or to change it directly many times per second. Instead of searching the page with `document.querySelector()`, give the element a `ref`: a function that HHT.js calls with the element.
+
+```js
+let buttonElement = null;
+
+createElement("button", {
+  ref: (element) => {
+    buttonElement = element;
+  },
+}, ["Save"]);
+```
+
+After this is rendered, `buttonElement` is the real `<button>`. `ref` is **not** added to the HTML.
+
+### When HHT.js calls a ref
+
+| What happens to the element | Ref call |
+| --- | --- |
+| It is created | `ref(element)` |
+| It is kept and updated by a later render, same `ref` function | nothing |
+| It is kept, but the `ref` function changed (A → B) | `A(null)`, then `B(element)` (same element) |
+| `ref` added (`null` → A) / removed (A → `null`) | `A(element)` / `A(null)` |
+| It is removed, or replaced because its tag changed | `ref(null)` |
+| `unmount()` on its container | `ref(null)` |
+| It is **moved** in a keyed list | nothing: moving is not removing |
+
+Timing:
+
+- Refs are called **after** `render()` (or `mount()` / `unmount()`) has finished updating the DOM, just before it returns. The element is complete (attributes, event handlers and children are all there) and already inside its container. If the container is in the page, you can call `element.focus()` directly in the ref.
+- All `ref(null)` calls of a render run **before** its `ref(element)` calls. So if the same function is moved from an old element to a new one, it ends up with the new one.
+- Inside a tree, children are handled before their parent, both when elements are created and when they are removed.
+
+Rules:
+
+- `ref` must be a function, `null` or `undefined`. Anything else throws `HHT.js: ref must be a function, null, or undefined.` when the element is created with `createElement`.
+- Define the function **once**, outside your view function (like `playerRef` below). An inline arrow function is a new function on every render, so HHT.js sees a changed ref and calls it with `null` and then the element on **every** render. That still works, but it does extra work.
+- Content added with `mount()` gets its refs called when inserted, but since `mount()` does not keep track of what it inserted, those refs are **not** called with `null` later (not even by `unmount()`).
+
+### Example: focusing an input
+
+TodoMVC gives the edit box of a todo a ref only while that todo is being edited (`todo/view.js`):
+
+```js
+function focusElement(element) {
+  element?.focus(); // element is null when editing ends
+}
+
+createElement("input", {
+  class: "edit",
+  ref: isEditing ? focusElement : null,
+  value: todo.text,
+});
+```
+
+When editing starts, the ref changes from `null` to `focusElement`, so HHT.js calls it with the input right after the row has been re-rendered in edit mode, and the input gets focus. Later renders keep the same function, so it is not focused again. When editing ends, it is called with `null`, which does nothing.
+
+### Example: fast updates without re-rendering
+
+Refs are useful for things that change every frame, such as a game character's position. Going through state and `render()` 60 times per second would rebuild and compare the whole virtual tree each time. With a ref you can write to the one element that changes:
+
+```js
+let playerElement = null;
+
+function playerRef(element) {
+  playerElement = element; // the element, or null once it is removed
+}
+
+function Player() {
+  return createElement("div", { key: "player-1", class: "player", ref: playerRef });
+}
+
+render("#game", Player());
+
+function drawPlayer(x, y) {
+  if (!playerElement) return;
+  playerElement.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+}
+```
+
+After `unmount("#game")`, `playerElement` is `null` again, so `drawPlayer` stops touching an element that is gone.
+
+Be careful not to change, with a ref, something that the element's virtual node also controls (for example setting `className` yourself while also passing `class`): the next render will set it back. Use refs for things the virtual node does not describe, like `style.transform` here or focus.
 
 ---
 
@@ -1458,33 +1050,84 @@ For each element, `render()` compares the new description with the old one:
 | Same tag                             | Keeps the element; updates only changed attributes, handlers and children |
 | Text changed                         | Changes just the text                                                     |
 | Different tag (e.g.`p` → `div`) | Throws the old element away and builds a new one                          |
-| New list has more children           | Adds the extra ones at the end                                            |
-| New list has fewer children          | Removes the extra ones from the end                                       |
+| New list has more children (unkeyed) | Adds the extra ones at the end                                            |
+| New list has fewer children (unkeyed) | Removes the extra ones from the end                                      |
+| Keyed list changed                   | Matches items by key: reuses, moves, creates or removes elements          |
 
-### Children are matched by position
+### Matching children: by position or by key
 
-HHT.js matches children by their **position** in the list: the 1st new child is compared with the 1st old child, the 2nd with the 2nd, and so on. It does not know which item is "the same item" (there are no *keys*).
+When an element's children change, HHT.js has to decide which new child corresponds to which old child. It does this in one of two ways.
 
-This matters when you remove an item from the **middle** of a list:
+| Mode | When | How children are matched |
+| --- | --- | --- |
+| **Unkeyed** | Any child in the list (old or new) has no `key` | By **position** |
+| **Keyed** | **Every** child in the list (old and new) has a `key` | By **key** |
+
+#### Unkeyed lists: matched by position
+
+The 1st new child is compared with the 1st old child, the 2nd with the 2nd, and so on. This is the default and is fine for content that doesn't move around: headers, forms, a fixed set of buttons.
+
+For a list where an item is removed from the **middle**:
 
 ```text
 old:  [ A ][ B ][ C ]
 new:  [ A ][ C ]
 
 position 1: A → A    unchanged
-position 2: B → C    the element that showed B is updated to show C
-position 3: C → —    the last element is removed
+position 2: B → C    the element that showed B is rewritten to show C
+position 3: C → —    the element that showed C is removed
 ```
 
-The result on screen is correct, and TodoMVC's delete, filter and clear-completed features rely on this. But it means:
+The page looks right, but the elements have shifted. If the user had focused C's checkbox, that checkbox is the one removed. In a long list, removing the first item rewrites every item after it.
 
-- an element can end up showing a different item than before. If the user had focused the checkbox of item B, focus stays on that element, which now shows C;
-- in long lists, removing the first item updates every item after it.
+Conditional children (`null`, `false`, …) are removed **before** comparing, so when one appears or disappears, the children after it shift one position too.
 
-Two more things follow from this:
+#### Keyed lists: matched by key
 
-- keep the **tag** of an element stable between renders, because switching tags rebuilds the whole subtree;
-- conditional children (`null`, `false`, …) are removed **before** comparing. When one appears or disappears, every child after it shifts one position. The result is still correct; it just updates more elements.
+Give every item a `key` that identifies it:
+
+```js
+const items = todos.map((todo) =>
+  createElement("li", { key: todo.id }, [todo.text]),
+);
+
+createElement("ul", { class: "todo-list" }, items);
+```
+
+Now HHT.js matches old and new children by key:
+
+```text
+old:  [ A ][ B ][ C ]
+new:  [ A ][ C ]
+
+A → same element as before (patched if it changed)
+B → its element is removed
+C → same element as before
+```
+
+The same happens for insertions (only the new item's element is created), reordering (the existing elements are moved, not rebuilt) and a mix of all three.
+
+Why this helps:
+
+- **Stable elements:** each item keeps its own element, so focus, typed text and other browser state stay with the right item;
+- **Less work:** removing, inserting or reordering items only touches the elements that really changed;
+- a matched element is still **patched normally**: if its attributes, text or event handlers changed, they are updated.
+
+Rules for keys:
+
+- `key` is never added to the real HTML element.
+- Keys only need to be **unique among siblings**. The same key can be used in a different list.
+- Two siblings with the same key throw `HHT.js: Duplicate key "1" found among sibling elements.` when the list is created.
+- Use strings or numbers. Keys are compared exactly, so `1` and `"1"` are **different** keys. Keep one type per list.
+- Use an ID that belongs to the item, not its array index: an index changes when items are removed, which defeats the purpose.
+- If **any** child in the list has no key, the whole list is compared by position and the keys are ignored for that list. Give keys to all items or to none.
+- Moving a focused element keeps its focus in browsers that support `moveBefore()` (recent Chrome/Edge). In other browsers, focus may be lost when **that** element moves. Removing or inserting other items never moves the remaining ones, so their focus is kept everywhere.
+
+TodoMVC gives each todo row `key: todo.id` in `todo/view.js`.
+
+#### Other rule
+
+Keep the **tag** of an element stable between renders. If the tag changes (for example `p` → `div`), HHT.js throws the old element away and builds a new one, even when the key is the same.
 
 ---
 
@@ -1577,13 +1220,24 @@ router.subscribe((path) => {
 });
 ```
 
-This works like a state subscription: the listener runs every time the route is set, and it cannot be removed. Subscribe your render function so the page follows the URL:
+This works like a state subscription: the listener runs every time the route is set. Subscribe your render function so the page follows the URL:
 
 ```js
 router.subscribe(renderApp);
 router.start();
 renderApp();
 ```
+
+`router.subscribe()` also returns an unsubscribe function, with the same rules as [state subscriptions](#stopping-a-subscription-the-unsubscribe-function):
+
+```js
+const unsubscribe = router.subscribe(renderApp);
+
+// later, when this code should stop following the URL:
+unsubscribe();
+```
+
+Unsubscribing only stops **your listener**. The router itself keeps watching the URL.
 
 ### Navigate
 
@@ -1619,7 +1273,7 @@ You get it automatically; there is nothing to import. It cannot be replaced with
 - No route parameters (`/todos/:id`): each path must be registered exactly.
 - No query strings: `#/active?x=1` is treated as the unknown route `/active?x=1`.
 - No history-API URLs (`/active` without `#`).
-- No way to stop the router or remove listeners.
+- No way to stop the router itself: once `start()` has run, it keeps listening for URL changes. (You *can* remove your own listeners with the function `subscribe()` returns.)
 
 ---
 
@@ -1860,16 +1514,17 @@ Open `http://localhost:5173/pages.html` and try:
 Import all of these from `framework/index.js`:
 
 ```js
-import { createElement, render, mount, state, createRouter } from "./framework/index.js";
+import { createElement, render, mount, unmount, state, createRouter } from "./framework/index.js";
 ```
 
 #### Elements and rendering
 
 | API | Parameters | Returns | Purpose |
 | --- | --- | --- | --- |
-| `createElement(tag, attrs = {}, children = [])` | `tag`: string; `attrs`: object of attributes and `on…` handlers; `children`: array (nested arrays flattened; `null`/`undefined`/booleans skipped) or a single child | Virtual node `{ tag, attrs, children }` | Describes an element |
-| `render(target, vnode)` | `target`: CSS selector string; `vnode`: one virtual node | nothing | First call: replaces the container's content. Later calls: updates only what changed. **Use this to show and update your app.** |
-| `mount(target, vnode)` | `target`: CSS selector string; `vnode`: one virtual node | nothing | Appends the elements once; no updates, no tracking |
+| `createElement(tag, attrs = {}, children = [])` | `tag`: string; `attrs`: object of HTML attributes, `on…` handlers, and the reserved `key` (list identity) and `ref` (callback receiving the real element); `children`: array (nested arrays flattened; `null`/`undefined`/booleans skipped) or a single child | Virtual node `{ tag, attrs, children }` | Describes an element. Throws if two children have the same `key`, or if `ref` is not a function/`null`/`undefined`. |
+| `render(target, vnode)` | `target`: CSS selector string or DOM element; `vnode`: one virtual node | nothing | First call: replaces the container's content. Later calls: updates only what changed. **Use this to show and update your app.** |
+| `mount(target, vnode)` | `target`: CSS selector string or DOM element; `vnode`: one virtual node | nothing | Appends the elements once; no updates, no tracking |
+| `unmount(target)` | `target`: CSS selector string or DOM element | nothing | Empties the container (content from `render` or `mount`) and forgets its previous tree; the next `render` starts fresh. Safe to repeat. |
 
 #### State
 
@@ -1878,7 +1533,7 @@ import { createElement, render, mount, state, createRouter } from "./framework/i
 | `state(initialValue)` | any value | state object | Creates a piece of state |
 | `stateObject.get()` | – | current value | Reads the value (the stored object itself, not a copy) |
 | `stateObject.set(valueOrUpdater)` | a new value, or `(current) => newValue` | nothing | Replaces the value, then calls every subscriber synchronously |
-| `stateObject.subscribe(listener)` | `(value) => {}` | nothing | Calls `listener` after every `set()`. Cannot be removed. |
+| `stateObject.subscribe(listener)` | `(value) => {}` | unsubscribe function | Calls `listener` after every `set()`. Call the returned function to remove this subscription (safe to call twice). |
 
 #### Routing
 
@@ -1890,7 +1545,7 @@ import { createElement, render, mount, state, createRouter } from "./framework/i
 | `router.navigate(path)` | path string | nothing | Changes the URL to `#path` |
 | `router.getCurrentRoute()` | – | path string, e.g. `"/active"` | Current path (registered or not) |
 | `router.getCurrentView(renderRoute)` | `(path) => vnode` | virtual node | `renderRoute(path)` for registered paths, otherwise the built-in 404 view |
-| `router.subscribe(listener)` | `(path) => {}` | nothing | Calls `listener` whenever the route is set. Cannot be removed. |
+| `router.subscribe(listener)` | `(path) => {}` | unsubscribe function | Calls `listener` whenever the route is set. Call the returned function to remove this subscription. |
 
 ### Internal modules (not public API)
 
@@ -1910,6 +1565,8 @@ These are exported from their own files so the framework modules (and the framew
 | `checked`, `disabled`, `selected`  | Boolean: set as DOM property and attribute; re-synced every render               |
 | `value`                                | Set as DOM property and attribute; re-synced every render if the user changed it |
 | value`null` or `undefined`           | Attribute is not set / is removed                                                |
+| `key`                                  | Not an attribute: identifies the element among its siblings for keyed diffing; never rendered |
+| `ref`                                  | Not an attribute: function called with the real element after render, and with `null` when it is removed; never rendered |
 | anything else                            | `setAttribute(key, value)`: use HTML names (`class`, `for`, `data-*`)    |
 
 ---
@@ -1940,7 +1597,6 @@ These are true of the current version. Plan around them.
 **State**
 
 - **`set()` does not update the page by itself.** You must `subscribe` a render function.
-- **Subscriptions cannot be removed** (state and router).
 - Subscribers run on every `set()`, even when the value did not change.
 - Updates are not batched: each `set()` means one full render.
 - A function cannot be stored as a state value (it is treated as an updater).
@@ -1948,13 +1604,15 @@ These are true of the current version. Plan around them.
 
 **Rendering**
 
-- `render()` and `mount()` accept a **CSS selector string** only, not a DOM element.
 - `render()` takes a single root node.
 - Every render rebuilds the **whole** virtual tree for that container and compares all of it, even if only one value changed. For large pages, split the page into several containers rendered separately.
-- Children are compared **by position, not by key**. Removing an item from the middle of a list updates every item after it, and a focused element can end up showing a different item.
+- Lists **without keys** are still compared by position: removing an item from the middle rewrites every item after it, and a focused element can end up showing a different item. Give dynamic lists a `key` on every item.
+- A list is keyed only if **every** child has a key; mixing keyed and unkeyed siblings falls back to position.
+- In browsers without `moveBefore()` support, an element that is **moved** within a keyed list loses focus. Removing or inserting other items does not move it.
 - Changing an element's tag rebuilds that element and everything inside it.
-- `mount()` does not support updates; there is no `unmount()`.
-- There is no built-in way to get a reference to a rendered element. Use the event's `event.target` (as TodoMVC does) or `document.querySelector()`.
+- `mount()` does not support updates (use `render()` for content that changes).
+- Refs are callback functions only (no `{ current }` ref objects).
+- Refs of content added with `mount()` are never called with `null`.
 
 **Routing**
 

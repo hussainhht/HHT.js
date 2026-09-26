@@ -30,7 +30,9 @@ function useDocument() {
   };
 
   globalThis.document = {
+    created: 0,
     createElement(tagName) {
+      this.created += 1;
       const element = new EventTarget();
       element.nodeType = 1;
       element.tagName = tagName.toUpperCase();
@@ -60,6 +62,14 @@ function useDocument() {
       };
       element.appendChild = function (node) {
         this.childNodes.push(node);
+        return node;
+      };
+      // Like the DOM: a node that is already a child is moved, not copied.
+      element.insertBefore = function (node, reference) {
+        const from = this.childNodes.indexOf(node);
+        if (from !== -1) this.childNodes.splice(from, 1);
+        const to = reference == null ? this.childNodes.length : this.childNodes.indexOf(reference);
+        this.childNodes.splice(to, 0, node);
         return node;
       };
       return element;
@@ -357,4 +367,208 @@ test("keeps input value and boolean properties in sync with attributes", () => {
   render("#app", input({ value: null }));
   assert.equal(element.value, "");
   assert.equal(element.getAttribute("value"), null);
+});
+
+// --- Keyed children ---------------------------------------------------------
+
+function keyedList(keys, attrs = () => ({})) {
+  return createElement("ul", {}, keys.map((key) =>
+    createElement("li", { key, ...attrs(key) }, [String(key)]),
+  ));
+}
+
+function renderKeys(keys, attrs) {
+  render("#app", keyedList(keys, attrs));
+  return document.querySelector("#app").childNodes[0].childNodes;
+}
+
+const texts = (nodes) => nodes.map((node) => node.childNodes[0].textContent);
+
+test("key is never rendered as a DOM attribute", () => {
+  const root = useDocument();
+
+  const li = renderElement(createElement("li", {
+    key: "todo-1",
+    id: "item",
+    class: "todo",
+    "data-id": "todo-1",
+  }, ["Task"]));
+  assert.equal(li.getAttribute("key"), null);
+  assert.equal(li.getAttribute("class"), "todo");
+  assert.equal(li.getAttribute("id"), "item");
+  assert.equal(li.getAttribute("data-id"), "todo-1");
+
+  render("#app", createElement("input", { key: 1, type: "checkbox", checked: true, value: "v" }));
+  render("#app", createElement("input", { key: 2, type: "checkbox", checked: false, value: "w" }));
+  render("#app", createElement("input", { type: "checkbox" }));
+  const input = root.childNodes[0];
+  assert.equal(input.getAttribute("key"), null);
+  assert.equal(input.checked, false);
+});
+
+test("removing a keyed middle child keeps the other DOM nodes", () => {
+  useDocument();
+  const [a, b, c] = renderKeys(["a", "b", "c"]);
+  document.created = 0;
+
+  const after = renderKeys(["a", "c"]);
+
+  assert.deepEqual(after, [a, c]);
+  assert.equal(after.includes(b), false);
+  assert.equal(document.created, 0);
+  assert.deepEqual(texts(after), ["a", "c"]);
+});
+
+test("reordering keyed children moves the existing DOM nodes", () => {
+  useDocument();
+  const [a, b, c] = renderKeys(["a", "b", "c"]);
+  document.created = 0;
+
+  assert.deepEqual(renderKeys(["c", "a", "b"]), [c, a, b]);
+  assert.deepEqual(renderKeys(["b", "c", "a"]), [b, c, a]);
+  assert.equal(document.created, 0);
+});
+
+test("inserting a keyed child creates only that child", () => {
+  useDocument();
+  const [a, c] = renderKeys(["a", "c"]);
+  document.created = 0;
+
+  const after = renderKeys(["a", "b", "c"]);
+
+  assert.equal(document.created, 1);
+  assert.equal(after[0], a);
+  assert.equal(after[2], c);
+  assert.deepEqual(texts(after), ["a", "b", "c"]);
+});
+
+test("moving one keyed child keeps every node", () => {
+  useDocument();
+  const [a, b, c, d] = renderKeys(["a", "b", "c", "d"]);
+  document.created = 0;
+
+  assert.deepEqual(renderKeys(["a", "d", "b", "c"]), [a, d, b, c]);
+  assert.deepEqual(renderKeys(["d", "c", "b", "a"]), [d, c, b, a]);
+  assert.equal(document.created, 0);
+});
+
+test("a keyed list can grow from and shrink to empty", () => {
+  useDocument();
+  assert.deepEqual(renderKeys([]), []);
+  const [x, y] = renderKeys(["x", "y"]);
+  assert.deepEqual(texts([x, y]), ["x", "y"]);
+  assert.deepEqual(renderKeys([]), []);
+});
+
+test("same key with changed attributes and text patches the same node", () => {
+  const root = useDocument();
+  const item = (className, text) => createElement("ul", {}, [
+    createElement("li", { key: 1, class: className }, [text]),
+    createElement("li", { key: 2 }, ["Other"]),
+  ]);
+
+  render("#app", item("active", "Task"));
+  const [li] = root.childNodes[0].childNodes;
+  const textNode = li.childNodes[0];
+
+  render("#app", item("completed", "Task updated"));
+
+  assert.equal(root.childNodes[0].childNodes[0], li);
+  assert.equal(li.childNodes[0], textNode);
+  assert.equal(li.getAttribute("class"), "completed");
+  assert.equal(textNode.textContent, "Task updated");
+});
+
+test("a keyed child whose tag changes is rebuilt in the right place", () => {
+  const root = useDocument();
+  render("#app", createElement("div", {}, [
+    createElement("p", { key: "a" }, ["A"]),
+    createElement("p", { key: "b" }, ["B"]),
+  ]));
+  const [a] = root.childNodes[0].childNodes;
+
+  render("#app", createElement("div", {}, [
+    createElement("p", { key: "a" }, ["A"]),
+    createElement("h2", { key: "b" }, ["B"]),
+  ]));
+
+  const [first, second] = root.childNodes[0].childNodes;
+  assert.equal(first, a);
+  assert.equal(second.tagName, "H2");
+});
+
+test("event handlers follow moved keyed elements without duplicating", () => {
+  useDocument();
+  const clicks = [];
+  const handlers = (version) => (key) => ({ onClick: () => clicks.push(`${version}:${key}`) });
+
+  const [a, b, c] = renderKeys(["a", "b", "c"], handlers("v1"));
+  renderKeys(["c", "a", "b"], handlers("v2"));
+
+  for (const node of [a, b, c]) node.dispatchEvent(new Event("click"));
+  assert.deepEqual(clicks, ["v2:a", "v2:b", "v2:c"]);
+});
+
+test("DOM state stays with its keyed item when an earlier item is removed", () => {
+  const root = useDocument();
+  const inputs = (keys) => createElement("form", {}, keys.map((key) =>
+    createElement("input", { key, name: key }),
+  ));
+
+  render("#app", inputs(["a", "b", "c"]));
+  const c = root.childNodes[0].childNodes[2];
+  c.value = "typed into c";
+
+  render("#app", inputs(["a", "c"]));
+
+  const [, second] = root.childNodes[0].childNodes;
+  assert.equal(second, c);
+  assert.equal(second.value, "typed into c");
+});
+
+test("duplicate sibling keys throw a clear error", () => {
+  useDocument();
+  assert.throws(
+    () => createElement("ul", {}, [
+      createElement("li", { key: 1 }, ["A"]),
+      createElement("li", { key: 1 }, ["B"]),
+    ]),
+    { message: 'HHT.js: Duplicate key "1" found among sibling elements.' },
+  );
+
+  // Keys only need to be unique among siblings.
+  assert.doesNotThrow(() => createElement("div", {}, [
+    createElement("ul", { key: "x" }, [createElement("li", { key: 1 })]),
+    createElement("ul", { key: "y" }, [createElement("li", { key: 1 })]),
+  ]));
+});
+
+test("numeric and string keys are different keys", () => {
+  useDocument();
+  assert.doesNotThrow(() => keyedList([1, "1"]));
+
+  const [one] = renderKeys([1]);
+  document.created = 0;
+  const [stringOne] = renderKeys(["1"]);
+
+  assert.notEqual(stringOne, one, '1 and "1" do not match');
+  assert.equal(document.created, 1);
+});
+
+test("a list where some children have no key is compared by position", () => {
+  const root = useDocument();
+  const mixed = (items) => createElement("ul", {}, items.map(([key, text]) =>
+    createElement("li", key == null ? {} : { key }, [text]),
+  ));
+
+  render("#app", mixed([["a", "A"], [null, "B"], ["c", "C"]]));
+  const [a, b] = root.childNodes[0].childNodes;
+
+  render("#app", mixed([["a", "A"], ["c", "C"]]));
+
+  const after = root.childNodes[0].childNodes;
+  assert.equal(after[0], a);
+  assert.equal(after[1], b, "second position reused, as in unkeyed lists");
+  assert.equal(after[1].childNodes[0].textContent, "C");
+  assert.equal(after.length, 2);
 });
