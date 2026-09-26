@@ -1,7 +1,26 @@
 import { isEvent, addEvent } from "./events.js";
 
 const mountedTrees = new WeakMap();
-const booleanAttributes = new Set(["checked", "disabled", "selected"]);
+// HTML boolean attributes: the attribute being present means "on", whatever
+// its value (`disabled="false"` is still disabled). So `true` adds the
+// attribute, `false`/`null`/`undefined` remove it, and a string is written as
+// given (`autofocus: ""`, `hidden: "until-found"`).
+const booleanAttributes = new Set([
+  "allowfullscreen", "async", "autofocus", "autoplay", "checked", "controls",
+  "default", "defer", "disabled", "formnovalidate", "hidden", "inert", "ismap",
+  "loop", "multiple", "muted", "nomodule", "novalidate", "open", "playsinline",
+  "readonly", "required", "reversed", "selected",
+]);
+
+// For these the DOM property can differ from the attribute (the user ticks a
+// checkbox; the attribute is only the initial value), so HHT.js also writes
+// the property and re-syncs it on every render. The other boolean attributes
+// are reflected by the browser: setting the attribute updates the property.
+const booleanProperties = new Set(["checked", "disabled", "selected", "muted"]);
+
+function isOn(value) {
+  return value !== false && value != null;
+}
 
 function normalizeChildren(children) {
   const list = Array.isArray(children) ? children : [children];
@@ -24,6 +43,18 @@ function checkUniqueKeys(children) {
       throw new Error(`HHT.js: Duplicate key "${String(key)}" found among sibling elements.`);
     }
     seen.add(key);
+  }
+}
+
+// Declarative handlers (`onClick: fn`) must be functions; null/undefined mean
+// "no handler". Checked here, before any DOM work, so a mistake such as
+// `onClick: enabled && save` fails at once with a clear message.
+function checkEventHandlers(attrs) {
+  if (attrs == null) return;
+  for (const [name, value] of Object.entries(attrs)) {
+    if (isEvent(name) && value != null && typeof value !== "function") {
+      throw new Error(`HHT.js: Event handler "${name}" must be a function, null, or undefined.`);
+    }
   }
 }
 
@@ -120,19 +151,19 @@ function updateStyle(element, oldStyle, newStyle) {
 }
 
 function removeDomAttribute(element, name) {
-  if (booleanAttributes.has(name) && name in element) element[name] = false;
+  if (booleanProperties.has(name) && name in element) element[name] = false;
   if (name === "value" && "value" in element) element.value = "";
   element.removeAttribute(name);
 }
 
 function setDomAttribute(element, name, value) {
-  if (value == null) {
+  if (booleanAttributes.has(name)) {
+    const on = isOn(value);
+    if (booleanProperties.has(name) && name in element) element[name] = on;
+    if (!on) element.removeAttribute(name);
+    else element.setAttribute(name, value === true ? "" : value);
+  } else if (value == null) {
     removeDomAttribute(element, name);
-  } else if (booleanAttributes.has(name)) {
-    const enabled = Boolean(value);
-    if (name in element) element[name] = enabled;
-    if (enabled) element.setAttribute(name, "");
-    else element.removeAttribute(name);
   } else if (name === "value" && "value" in element) {
     element.value = String(value);
     element.setAttribute(name, value);
@@ -144,6 +175,7 @@ function setDomAttribute(element, name, value) {
 export function createElement(tag, attrs = {}, children = []) {
   checkRef(attrs?.ref);
   checkStyle(attrs?.style);
+  checkEventHandlers(attrs);
   const normalized = normalizeChildren(children);
   checkUniqueKeys(normalized);
   return {
@@ -163,7 +195,7 @@ export function renderElement(node) {
   for (const [name, value] of Object.entries(node.attrs)) {
     if (name === "key" || name === "ref" || name === "style") continue;
     if (isEvent(name)) {
-      addEvent(element, name, value);
+      if (value) addEvent(element, name, value);
     } else {
       setDomAttribute(element, name, value);
     }
@@ -233,8 +265,8 @@ function updateAttributes(element, previous = {}, next = {}) {
     if (oldValue === value) {
       if (name === "value" && "value" in element && element.value !== (value == null ? "" : String(value))) {
         element.value = value == null ? "" : String(value);
-      } else if (booleanAttributes.has(name) && name in element && element[name] !== Boolean(value)) {
-        element[name] = Boolean(value);
+      } else if (booleanProperties.has(name) && name in element && element[name] !== isOn(value)) {
+        element[name] = isOn(value);
       }
       continue;
     }
@@ -243,7 +275,7 @@ function updateAttributes(element, previous = {}, next = {}) {
       if (oldValue) {
         element.removeEventListener(name.slice(2).toLowerCase(), oldValue);
       }
-      addEvent(element, name, value);
+      if (value) addEvent(element, name, value);
     } else {
       setDomAttribute(element, name, value);
     }

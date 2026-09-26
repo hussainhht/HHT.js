@@ -231,38 +231,41 @@ const classes = [todo.completed && "completed", isEditing && "editing"]
 createElement("li", { class: classes || null }, [todo.text]);
 ```
 
-### `value`, `checked`, `disabled`, `selected`
+### Boolean attributes (`hidden`, `disabled`, `required`, …)
 
-These four are special. HHT.js sets them as **DOM properties** (for example `input.checked = true`) as well as attributes, because that is what the browser actually displays. They also stay in sync on every render (see [Forms](#forms-controlled-and-uncontrolled-inputs)).
+In HTML, some attributes are **on when present**, whatever their value. `<input disabled="false">` is still disabled. HHT.js knows these boolean attributes, so you can pass plain `true`/`false`:
 
-`checked`, `disabled` and `selected` take real booleans:
+```js
+createElement("p", { hidden: !isVisible }, ["Hello"]);
+
+createElement("input", { required: isRequired, readonly: isLocked });
+
+createElement("button", { disabled: count === 0 }, ["Reset"]); // disabled only when count is 0
+```
+
+| Value | Result |
+| --- | --- |
+| `true` | The attribute is added (`<input required>`) |
+| `false`, `null`, `undefined`, or left out | The attribute is removed. It is never written as `"false"`. |
+| A string | Written as given, which in HTML means "on" (`autofocus: ""`, `hidden: "until-found"`) |
+
+HHT.js treats these names as boolean attributes: `allowfullscreen`, `async`, `autofocus`, `autoplay`, `checked`, `controls`, `default`, `defer`, `disabled`, `formnovalidate`, `hidden`, `inert`, `ismap`, `loop`, `multiple`, `muted`, `nomodule`, `novalidate`, `open`, `playsinline`, `readonly`, `required`, `reversed`, `selected`.
+
+Use the **HTML** names, all lower case: `readonly`, not `readOnly`.
+
+Every other attribute keeps its value as text, so `"data-active": false` or `"aria-hidden": false` is written as `"false"`. For `aria-*` attributes that is what you want. For your own `data-*` flags, pass `null` to leave the attribute out.
+
+### `value`, `checked`, `selected` (and `disabled`, `muted`)
+
+For some attributes, what the browser **shows** is a DOM property that can differ from the attribute. When the user ticks a checkbox, `input.checked` changes but the `checked` attribute does not. For `value`, `checked`, `selected`, `disabled` and `muted`, HHT.js therefore also sets the property (`input.checked = true`) and puts it back to the vnode's value on every render (see [Forms](#forms-controlled-and-uncontrolled-inputs)):
 
 ```js
 createElement("input", { type: "checkbox", checked: true });   // ticked
 createElement("input", { type: "checkbox", checked: false });  // not ticked
-createElement("button", { disabled: count === 0 }, ["Reset"]); // disabled only when count is 0
+createElement("input", { type: "text", value: "Draft" });      // value: a string or number
 ```
 
-`value` takes a string or number:
-
-```js
-createElement("input", { type: "text", value: "Draft" });
-```
-
-### Other boolean attributes (`hidden`, `readonly`, `required`, `autofocus`, …)
-
-Only `checked`, `disabled` and `selected` understand `true`/`false`. For every other attribute, `false` is turned into the text `"false"`, and the browser treats **any** value of a boolean attribute as "on". So:
-
-```js
-createElement("p", { hidden: false }, ["Oops"]); // ⚠️ still hidden!
-```
-
-Use `""` to turn it on and `null` to turn it off:
-
-```js
-createElement("p", { hidden: isVisible ? null : "" }, ["Now correct"]);
-createElement("input", { class: "new-todo", autofocus: "" });  // from todo/view.js
-```
+The other boolean attributes need nothing extra: setting or removing the attribute is enough for the browser.
 
 ### Inline styles
 
@@ -556,9 +559,29 @@ createElement("form", {
 
 ### Handlers and re-rendering
 
-When the page is rendered again (see [Rendering](#rendering)), HHT.js compares each handler with the one from the previous render. If it is a different function, the old one is removed and the new one is added, so **a handler never runs twice**. To remove a handler, leave the `on…` attribute out or set it to `null`.
+When the page is rendered again (see [Rendering](#rendering)), HHT.js compares each handler with the one from the previous render. If it is the same function, nothing happens. If it is a different function, the old one is removed and the new one is added, so **a handler never runs twice**.
 
-> Do not write `onClick: condition && handler`: when `condition` is `false` the browser throws an error. Use `onClick: condition ? handler : null`.
+### Handler values
+
+An `on…` attribute must be a **function**, `null` or `undefined`:
+
+```js
+createElement("button", { onClick: handleClick });                   // listener attached
+createElement("button", { onClick: null });                          // no listener
+createElement("button", { onClick: enabled ? handleClick : null });  // only when enabled
+```
+
+`null`, `undefined`, or leaving the attribute out all mean "no listener". If a previous render had a handler, it is removed.
+
+Anything else is a mistake, and `createElement` throws straight away, before anything is added to the page:
+
+```js
+createElement("button", { onClick: enabled && handleClick });
+// when enabled is false:
+// Error: HHT.js: Event handler "onClick" must be a function, null, or undefined.
+```
+
+`enabled && handleClick` evaluates to `false` when `enabled` is false, so use the `? handleClick : null` form for conditional handlers.
 
 ### What `on…` attributes cannot do
 
@@ -1747,8 +1770,9 @@ These are exported from their own files so the framework modules (and the framew
 
 | Key in`attrs`                          | Behavior                                                                         |
 | ---------------------------------------- | -------------------------------------------------------------------------------- |
-| `onXxx` (any key starting with `on`) | Event listener for event`xxx` (lower-cased). `null`/missing removes it.      |
-| `checked`, `disabled`, `selected`  | Boolean: set as DOM property and attribute; re-synced every render               |
+| `onXxx` (any key starting with `on`) | Event listener for event`xxx` (lower-cased). Must be a function, `null` or `undefined` (else `createElement` throws); `null`/missing = no listener. |
+| Boolean HTML attributes (`hidden`, `disabled`, `required`, `readonly`, `open`, … see [the list](#boolean-attributes-hidden-disabled-required-)) | `true` → present; `false`/`null`/`undefined` → absent; a string → written as given |
+| `checked`, `selected`, `disabled`, `muted` | Boolean attributes whose DOM property is also set and re-synced every render |
 | `value`                                | Set as DOM property and attribute; re-synced every render if the user changed it |
 | value`null` or `undefined`           | Attribute is not set / is removed                                                |
 | `key`                                  | Not an attribute: identifies the element among its siblings for keyed diffing; never rendered |
@@ -1768,7 +1792,7 @@ These are true of the current version. Plan around them.
 - Children must be passed as **one array** (third argument). Extra arguments are ignored.
 - **Function children** (e.g. `() => count.get()`) are not supported and cause an error.
 - `attrs` must be an object; `null` causes an error. Use `{}`.
-- Only `checked`, `disabled` and `selected` understand `true`/`false`. For other boolean attributes (`hidden`, `readonly`, `required`, …) use `""` for on and `null` for off.
+- `true`/`false` only have boolean meaning for the [listed boolean attributes](#boolean-attributes-hidden-disabled-required-). For any other attribute, `false` is written as the text `"false"`: use `null` to leave it out.
 - HHT.js does not add CSS units to numbers in style objects: write `"100px"`, not `100`.
 - In style objects, only names starting with `--` are treated as custom properties (set with `setProperty()`); write all other names in camelCase (`backgroundColor`).
 - `class` must be a string (no arrays or objects).
@@ -1778,7 +1802,7 @@ These are true of the current version. Plan around them.
 **Events**
 
 - The event name is the lower-cased text after `on`. Use `onDblClick` (not `onDoubleClick`). Custom events must have all-lowercase names.
-- A handler value of `false` causes an error; use `null` for "no handler".
+- `on…` values must be functions, `null` or `undefined`: write `onClick: enabled ? handler : null`, not `enabled && handler` (which throws an HHT.js error when `enabled` is false).
 - `on…` attributes take no listener options (`once`, `capture`, `passive`); use `on()` on the element (via a ref) when you need them.
 - Listeners added with `on()` are not removed automatically (not by `unmount()` either); call the function it returns.
 - There are no event modifiers or shortcuts (such as an "Enter only" handler): check `event.key` etc. in your handler.
