@@ -11,16 +11,15 @@ function renderApp() {
   render("#app", router.getCurrentView(createTodoPage));
 }
 
-// Restore saved todos before anything subscribes, so startup doesn't trigger
-// a render or a save. Edit mode always starts off.
+// Before anything subscribes, so startup triggers neither a render nor a save.
 todoState.set((current) => ({
   ...current,
   todos: loadTodos(),
   editingId: null,
 }));
 
-// Actions always build a new todos array when the list changes, so comparing
-// references is enough to skip saves for edit-mode-only updates.
+// Actions build a new array whenever the list changes, so a reference check
+// skips saves for edit-mode-only updates.
 let savedTodos = todoState.get().todos;
 todoState.subscribe(({ todos }) => {
   if (todos === savedTodos) return;

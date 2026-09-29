@@ -1,6 +1,4 @@
-// Stage 10 framework test app (counter + message demo). No longer the page
-// entry point, which is now TodoMVC in app.js; kept so tests/rendering.test.js
-// can still exercise state-driven re-rendering end to end.
+// Counter + message demo; only used by tests/rendering.test.js.
 import { createRouter, render } from "../framework/index.js";
 import { createPage } from "./page.js";
 import { routePaths } from "./routes.js";

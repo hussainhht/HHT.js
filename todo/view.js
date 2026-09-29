@@ -13,14 +13,10 @@ import {
 import { routePaths } from "./routes.js";
 import { todoState } from "./state.js";
 
-// Root of the TodoMVC layout. TodoMVC CSS targets `section.todoapp`,
-// so the class name must match exactly. Children are added in later steps.
 export function createTodoApp(children = []) {
   return createElement("section", { class: "todoapp" }, children);
 }
 
-// TodoMVC puts the title and the new-todo input side by side inside
-// `header.header`.
 export function createHeader() {
   return createElement("header", { class: "header" }, [
     createElement("h1", {}, ["todos"]),
@@ -28,30 +24,22 @@ export function createHeader() {
   ]);
 }
 
-// The new-todo input is uncontrolled: what the user types lives only in the
-// DOM element, not in state, and is read from the event when it is needed.
+// Uncontrolled input: the typed text lives only in the DOM element.
 function getNewTodoText(event) {
   return event.target.value;
 }
 
-// Only Enter submits. `isComposing` is true while an input method (e.g. for
-// Japanese or Chinese) is still building a character, where Enter confirms
-// the character rather than the todo.
+// `isComposing`: Enter confirms an input-method character, not the todo.
 function handleNewTodoKeydown(event) {
   if (event.key !== "Enter" || event.isComposing) return;
-  // Trimmed so "  buy milk " is saved cleanly and whitespace-only input
-  // counts as empty.
   const text = getNewTodoText(event).trim();
   if (text === "") return;
 
-  // Cleared before the state update: adding the todo re-renders the page, so
-  // clearing first doesn't depend on the render keeping this same element.
+  // Cleared first so it doesn't depend on the render keeping this element.
   event.target.value = "";
   addTodo(createTodo(text));
 }
 
-// Input for adding todos. `input.new-todo` is the class TodoMVC CSS and
-// tests look for.
 export function createNewTodoInput() {
   return createElement("input", {
     class: "new-todo",
@@ -61,9 +49,6 @@ export function createNewTodoInput() {
   });
 }
 
-// Middle part of the app. In TodoMVC, `section.main` holds the toggle-all
-// checkbox (id + label pair) followed by the todo list, passed in as children.
-// The checkbox is checked exactly when every todo is completed.
 export function createMainSection(
   children = [],
   { allCompleted = false } = {},
@@ -81,23 +66,17 @@ export function createMainSection(
   ]);
 }
 
-// `ul.todo-list` goes inside the main section; each todo becomes an `li`
-// passed in as children.
 export function createTodoList(items = []) {
   return createElement("ul", { class: "todo-list" }, items);
 }
 
-// Used as the edit input's `ref` only while its todo is being edited. When
-// editing starts, the ref changes from null to this function, so HHT.js calls
-// it with the input once the row is rendered with `.editing` (input visible).
-// When editing ends it is called with null, which does nothing.
+// Only used as the edit input's `ref` while editing: the ref changes from null
+// to this function when editing starts, so the input is focused once visible.
 function focusElement(element) {
   element?.focus();
 }
 
-// Enter saves, Escape cancels. `isComposing` is skipped for the same reason
-// as in the new-todo input. Browsers keep focus on an input that gets hidden,
-// so it is blurred by hand; otherwise typing would go into the hidden input.
+// Browsers keep focus on an input that gets hidden, so it is blurred by hand.
 function handleEditKeydown(event, id) {
   if (event.isComposing) return;
   if (event.key === "Enter") saveEdit(id, event.target.value);
@@ -106,24 +85,17 @@ function handleEditKeydown(event, id) {
   event.target.blur();
 }
 
-// Clicking away saves too. After Enter or Escape the todo is no longer being
-// edited, so a blur that follows must not save again (after Escape that would
-// save the text that was just discarded).
+// After Enter or Escape the todo is no longer being edited, so the blur that
+// follows must not save again (after Escape it would save discarded text).
 function handleEditBlur(event, id) {
   if (todoState.get().editingId !== id) return;
   saveEdit(id, event.target.value);
 }
 
-// One todo row, following TodoMVC markup: a `.view` with checkbox, label and
-// delete button, plus a hidden `.edit` input used for editing.
-// `completed` class drives the strikethrough styling; `editing` swaps the
-// `.view` for the `.edit` input.
 export function createTodoItem(todo, isEditing = false) {
   const classes = [todo.completed && "completed", isEditing && "editing"]
     .filter(Boolean)
     .join(" ");
-  // `key` lets the renderer keep each row's DOM element with its todo when
-  // todos are removed, filtered or reordered. It is not rendered.
   return createElement("li", { key: todo.id, "data-id": todo.id, class: classes || null }, [
     createElement("div", { class: "view" }, [
       createElement("input", {
@@ -142,8 +114,7 @@ export function createTodoItem(todo, isEditing = false) {
         onClick: () => deleteTodo(todo.id),
       }),
     ]),
-    // Starts from the current title each time editing begins; an edit that
-    // was cancelled is reset because the render syncs `value` back.
+    // Controlled on purpose: a cancelled edit is reset by the next render.
     createElement("input", {
       class: "edit",
       ref: isEditing ? focusElement : null,
@@ -154,14 +125,10 @@ export function createTodoItem(todo, isEditing = false) {
   ]);
 }
 
-// Bottom bar of the app. `footer.footer` holds the item counter, the filter
-// links and the clear-completed button, passed in as children.
 export function createFooter(children = []) {
   return createElement("footer", { class: "footer" }, children);
 }
 
-// "N items left" counter. TodoMVC wraps the number in `strong` inside
-// `span.todo-count`, and uses "item" for exactly one.
 export function createTodoCount(count) {
   return createElement("span", { class: "todo-count" }, [
     createElement("strong", {}, [count]),
@@ -175,8 +142,6 @@ const filterLinks = [
   { label: "Completed", path: routePaths.completed },
 ];
 
-// Filter links as `ul.filters`. The link for the current route gets the
-// `selected` class, which TodoMVC CSS uses to draw the highlight border.
 export function createFilters(currentRoute = routePaths.home) {
   return createElement(
     "ul",
@@ -196,8 +161,6 @@ export function createFilters(currentRoute = routePaths.home) {
   );
 }
 
-// `button.clear-completed` sits at the right of the footer. TodoMVC only
-// shows it when at least one todo is completed, so return nothing otherwise.
 export function createClearCompleted(completedCount) {
   if (completedCount === 0) return null;
   return createElement(
@@ -207,16 +170,13 @@ export function createClearCompleted(completedCount) {
   );
 }
 
-// Info text below the app. It is a sibling of `section.todoapp`, not a
-// child, and uses `footer.info` for its styling.
 export function createInfoFooter() {
   return createElement("footer", { class: "info" }, [
     createElement("p", {}, ["Double-click to edit a todo"]),
   ]);
 }
 
-// Picks which todos to show for a route. This only filters what is rendered;
-// state always keeps every todo, so switching filters never loses any.
+// Only filters what is rendered; state keeps every todo.
 function filterTodos(todos, route) {
   if (route === routePaths.active) {
     return todos.filter((todo) => !todo.completed);
@@ -227,13 +187,11 @@ function filterTodos(todos, route) {
   return todos;
 }
 
-// Full TodoMVC page. `render` mounts a single root, so the app and the info
-// footer are wrapped in a plain div.
+// render() takes a single root, so the app and info footer share a div.
 export function createTodoPage(route = routePaths.home) {
   const { todos, editingId } = todoState.get();
   const activeCount = todos.filter((todo) => !todo.completed).length;
   const completedCount = todos.length - activeCount;
-  // With no todos, activeCount is 0 too; toggle-all shouldn't show as checked.
   const allCompleted = todos.length > 0 && activeCount === 0;
 
   return createElement("div", {}, [

@@ -23,8 +23,7 @@ test("the destroy button removes exactly the todo it belongs to", async () => {
     const texts = () => todoState.get().todos.map((todo) => todo.text);
     const renderedTexts = () => rows().map(getTextContent);
 
-    // Middle: rows are patched by position, so the row that moves up must
-    // now carry the handler for its new todo.
+    // Middle: the rows after it must still carry the handlers for their own todos.
     destroy(2);
     assert.deepEqual(texts(), ["one", "two", "four", "five"]);
     assert.deepEqual(renderedTexts(), texts());

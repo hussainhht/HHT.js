@@ -2,15 +2,13 @@ export function isEvent(name) {
   return name.startsWith("on");
 }
 
-// Declarative handlers (`onClick: fn`). Each element gets one stable native
-// listener per `on…` attribute, which calls whatever handler the latest render
-// passed. A new function on every render (an inline arrow) then only updates
-// `record.handler`, instead of removing and re-adding the browser listener.
-// The WeakMap does not keep removed elements alive.
+// One stable native listener per `on…` attribute, calling whatever handler the
+// latest render passed: a new inline arrow each render only updates
+// `record.handler` instead of removing and re-adding the listener.
+// A WeakMap, so removed elements are not kept alive.
 const handlersByElement = new WeakMap();
 
-// Sets the handler for the `on…` attribute `name` ("onClick") on `element`:
-// a function attaches or updates it, null/undefined removes it.
+// A function attaches or updates the handler; null/undefined removes it.
 export function setEventHandler(element, name, handler) {
   const eventName = name.slice(2).toLowerCase();
   let records = handlersByElement.get(element);
@@ -38,9 +36,8 @@ export function setEventHandler(element, name, handler) {
   }
 }
 
-// Listens to an event on any event target (window, document, an element...)
-// and returns a function that stops listening. `options` is passed to the
-// browser unchanged (boolean capture flag or { capture, once, passive, signal }).
+// `options` is passed to the browser unchanged. Returns a function that stops
+// listening.
 export function on(target, eventName, handler, options) {
   if (
     target == null ||
@@ -56,9 +53,8 @@ export function on(target, eventName, handler, options) {
     throw new Error("HHT.js: Event handler must be a function.");
   }
 
-  // A new wrapper per call, so registering the same handler twice gives two
-  // independent listeners (the browser would otherwise ignore the second).
-  // A normal function keeps `this` as the target, as with addEventListener.
+  // A new wrapper per call: the browser would ignore a second registration of
+  // the same function, but each on() call should be independent.
   const listener = function (event) {
     return handler.call(this, event);
   };

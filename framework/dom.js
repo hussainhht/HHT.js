@@ -1,10 +1,8 @@
 import { isEvent, setEventHandler } from "./events.js";
 
 const mountedTrees = new WeakMap();
-// HTML boolean attributes: the attribute being present means "on", whatever
-// its value (`disabled="false"` is still disabled). So `true` adds the
-// attribute, `false`/`null`/`undefined` remove it, and a string is written as
-// given (`autofocus: ""`, `hidden: "until-found"`).
+// Present means "on" whatever the value (`disabled="false"` is still disabled),
+// so `false`/`null`/`undefined` remove the attribute and a string is written as given.
 const booleanAttributes = new Set([
   "allowfullscreen", "async", "autofocus", "autoplay", "checked", "controls",
   "default", "defer", "disabled", "formnovalidate", "hidden", "inert", "ismap",
@@ -12,10 +10,9 @@ const booleanAttributes = new Set([
   "readonly", "required", "reversed", "selected",
 ]);
 
-// For these the DOM property can differ from the attribute (the user ticks a
-// checkbox; the attribute is only the initial value), so HHT.js also writes
-// the property and re-syncs it on every render. The other boolean attributes
-// are reflected by the browser: setting the attribute updates the property.
+// The property can differ from the attribute (a ticked checkbox leaves the
+// attribute alone), so these are also written as properties and re-synced on
+// every render. The other boolean attributes are reflected by the browser.
 const booleanProperties = new Set(["checked", "disabled", "selected", "muted"]);
 
 function isOn(value) {
@@ -27,13 +24,11 @@ function normalizeChildren(children) {
   return list.flat(Infinity).filter((child) => child != null && typeof child !== "boolean");
 }
 
-// `key` identifies an element among its siblings. It is only read by the
-// renderer and never becomes a DOM attribute. Text children have no key.
 function getKey(child) {
   return typeof child === "object" ? child.attrs?.key : undefined;
 }
 
-// Keys are compared like Map keys, so 1 and "1" are different keys.
+// Compared like Map keys: 1 and "1" are different.
 function checkUniqueKeys(children) {
   const seen = new Set();
   for (const child of children) {
@@ -46,9 +41,8 @@ function checkUniqueKeys(children) {
   }
 }
 
-// Declarative handlers (`onClick: fn`) must be functions; null/undefined mean
-// "no handler". Checked here, before any DOM work, so a mistake such as
-// `onClick: enabled && save` fails at once with a clear message.
+// Checked before any DOM work so `onClick: enabled && save` fails at once
+// instead of silently attaching nothing.
 function checkEventHandlers(attrs) {
   if (attrs == null) return;
   for (const [name, value] of Object.entries(attrs)) {
@@ -58,16 +52,12 @@ function checkEventHandlers(attrs) {
   }
 }
 
-// `ref` is a callback that receives the real element. Like `key`, it is read
-// by the renderer and never becomes a DOM attribute.
 function checkRef(ref) {
   if (ref != null && typeof ref !== "function") {
     throw new Error("HHT.js: ref must be a function, null, or undefined.");
   }
 }
 
-// `style` is a CSS string (set as the whole attribute) or an object of
-// properties (set one by one on element.style). Arrays are not style objects.
 function isStyleObject(style) {
   return typeof style === "object" && style !== null && !Array.isArray(style);
 }
@@ -78,11 +68,10 @@ function checkStyle(style) {
   }
 }
 
-// Ref calls are collected while the DOM is built or patched, and run when
-// render(), mount() or unmount() has finished, so a ref always sees its
-// element in place. All ref(null) cleanups run before the new ref(element)
-// calls, so a callback moved from an old element to a new one ends up with
-// the new one.
+// Ref calls are collected while the DOM is built or patched and run once
+// render(), mount() or unmount() has finished, so a ref sees its element in
+// place. All ref(null) calls run first, so a callback moved from an old
+// element to a new one ends up holding the new one.
 let refCleanups = [];
 let refAssignments = [];
 
@@ -99,15 +88,15 @@ function flushRefs() {
   for (const [ref, element] of assignments) ref(element);
 }
 
-// Queues ref(null) for every ref in a removed tree, children before parents.
+// Children before parents.
 function releaseRefs(tree) {
   if (typeof tree !== "object") return;
   for (const child of tree.children) releaseRefs(child);
   if (tree.attrs.ref) refCleanups.push(tree.attrs.ref);
 }
 
-// Custom properties ("--player-x") only work through setProperty(). Values are
-// written as given: HHT.js never adds units such as "px".
+// Custom properties ("--player-x") only work through setProperty(). No units
+// are ever added.
 function setStyleProperty(style, name, value) {
   if (value == null) removeStyleProperty(style, name);
   else if (name.startsWith("--")) style.setProperty(name, String(value));
@@ -119,10 +108,8 @@ function removeStyleProperty(style, name) {
   else style[name] = "";
 }
 
-// Updates inline styles from the previous `style` value to the next one.
-// Object to object only writes the properties that changed. HHT.js only
-// removes styles that the previous `style` value set, so styles written
-// through a ref on properties the vnode never mentions are left alone.
+// Only removes styles the previous `style` value set, so properties written
+// through a ref are left alone.
 function updateStyle(element, oldStyle, newStyle) {
   if (oldStyle === newStyle || (oldStyle == null && newStyle == null)) return;
 
@@ -211,9 +198,8 @@ export function renderElement(node) {
   return element;
 }
 
-// A target is a CSS selector or a DOM element. Either way the result is the
-// element itself, so render history (mountedTrees) is kept per element: "#app"
-// and document.querySelector("#app") are the same root.
+// Resolves to the element itself, so render history is kept per element:
+// "#app" and document.querySelector("#app") are the same root.
 function getRoot(target) {
   if (typeof target === "string") {
     let root;
@@ -230,8 +216,7 @@ function getRoot(target) {
     return root;
   }
 
-  // nodeType 1 = element. Checked by value (not `instanceof Element`) so
-  // elements from other frames work too.
+  // nodeType 1 = element; not `instanceof Element`, so other frames work too.
   if (target !== null && typeof target === "object" && target.nodeType === 1) {
     return target;
   }
@@ -279,8 +264,7 @@ function updateAttributes(element, previous = {}, next = {}) {
   }
 }
 
-// Moves an existing child. moveBefore() (in newer browsers) keeps focus and
-// other element state; insertBefore() is the fallback everywhere else.
+// moveBefore() keeps focus and other element state; insertBefore() is the fallback.
 function moveNode(parent, node, reference) {
   if (typeof parent.moveBefore === "function" && node.isConnected) {
     parent.moveBefore(node, reference);
@@ -289,10 +273,9 @@ function moveNode(parent, node, reference) {
   }
 }
 
-// Keyed lists: match old and new children by key instead of by position.
-// Removed keys are dropped first, so deleting an item never moves the items
-// around it; then each new child is patched (same key) or created (new key)
-// and moved into place only if it is not already there.
+// Removed keys are dropped first, so deleting an item never moves its
+// neighbours; then each new child is patched or created and moved into place
+// only if it is not already there.
 function patchKeyedChildren(element, previous, next) {
   const oldByKey = new Map();
   previous.forEach((tree, index) => {
@@ -322,8 +305,7 @@ function patchKeyedChildren(element, previous, next) {
   });
 }
 
-// A child list is keyed only if every child, old and new, has a key.
-// Otherwise the whole list is compared by position, as before.
+// Keyed only if every child, old and new, has a key; otherwise by position.
 function isKeyedList(previous, next) {
   const all = [...previous, ...next];
   return all.length > 0 && all.every((child) => getKey(child) != null);
@@ -372,7 +354,7 @@ function patchNode(parent, currentNode, previousTree, nextTree) {
   updateAttributes(currentNode, previousTree.attrs, nextTree.attrs);
   patchChildren(currentNode, previousTree.children, nextTree.children);
 
-  // Same element kept: refs are only called if the callback itself changed.
+  // Refs are only called again if the callback itself changed.
   const previousRef = previousTree.attrs.ref;
   const nextRef = nextTree.attrs.ref;
   if (previousRef !== nextRef) {
@@ -401,7 +383,7 @@ export function render(target, node) {
       root.removeChild(root.childNodes[root.childNodes.length - 1]);
     }
   } else {
-    // The old content was removed from outside HHT.js: release its refs.
+    // Old content was removed from outside HHT.js.
     if (previousTree) releaseRefs(previousTree);
     root.replaceChildren(renderElement(node));
   }
@@ -410,10 +392,7 @@ export function render(target, node) {
   flushRefs();
 }
 
-// Empties the root (whether its content came from render() or mount()) and
-// forgets its previous tree, so the next render() starts fresh. Refs in the
-// rendered tree are called with null. The root element itself stays in the
-// page. Safe to call on an empty root.
+// Only refs from render() are released; mount() does not track its content.
 export function unmount(target) {
   const root = getRoot(target);
   const previousTree = mountedTrees.get(root);
