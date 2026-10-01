@@ -1,10 +1,17 @@
-# HHT.js
+<p align="center">
+  <img src="docs/favicon.svg" alt="HHT.js logo" width="120" height="120" />
+</p>
+
+<h1 align="center">HHT.js</h1>
 
 HHT.js is a small JavaScript framework for building web pages, written from scratch with no dependencies. You describe the page with plain JavaScript objects; HHT.js creates the real elements and, when your state changes, updates only the parts of the page that differ.
 
 The repository also contains a complete [TodoMVC](https://todomvc.com/) application built with HHT.js.
 
-📖 **Full documentation: [docs/documentation.md](docs/documentation.md)**
+📖 **Documentation**
+
+- **[Documentation page](#documentation-page-docshtml)** (`docs.html`): the guide as a web page. Run `npm run dev` and open <http://localhost:5173/docs.html>.
+- **[Full manual](docs/documentation.md)** (`docs/documentation.md`): the complete reference, readable on GitHub.
 
 ## Core features
 
@@ -29,7 +36,38 @@ npm run dev    # starts Vite; open the printed address (usually http://localhost
 npm test       # runs the test suite with Node's built-in test runner
 ```
 
-A development server is needed because the framework is written as ES modules, which browsers don't load from `file://` pages.
+A development server is needed because the framework is written as ES modules, which browsers don't load from `file://` pages. The same applies to `docs.html`, so don't open it by double-clicking the file.
+
+| Address | Page |
+| --- | --- |
+| `http://localhost:5173/` | the TodoMVC app |
+| `http://localhost:5173/docs.html` | the documentation page |
+
+If port 5173 is busy, Vite picks the next free one and prints it. To open the documentation directly when the server starts:
+
+```bash
+npm run dev -- --open /docs.html
+```
+
+## Documentation page (`docs.html`)
+
+`docs.html` is the HHT.js guide as a single web page, served by the same dev server as the TodoMVC app.
+
+**How to open it**
+
+1. Run `npm install` once, then `npm run dev`.
+2. Open `/docs.html` on the address Vite prints, usually <http://localhost:5173/docs.html>.
+
+**What it offers**
+
+- A sidebar grouped as *Start here*, *Building UI*, *Routing*, *Examples* and *Understand more*, with a search box to find a section.
+- Code samples with a **Copy** button.
+- **Light and dark mode**, switched with the button in the header. The first visit follows your system setting; after that your choice is remembered.
+- A menu button on narrow screens, so it also works on a phone.
+
+Its files are `docs.html` (content), `docs/documentation.css` (styles) and `docs/documentation.js` (copy buttons, search, theme and menu). The theme choice is stored in `localStorage` under `theme-hhtjs`, the same key the TodoMVC app uses, so both pages always show the same theme.
+
+`docs.html` is the quick guide. For the complete reference (diffing, keys, refs, forms, limitations, the full API), read [docs/documentation.md](docs/documentation.md).
 
 ## Basic example
 
@@ -61,6 +99,7 @@ HHT.js uses **named exports only**, all from `framework/index.js`. `state.set()`
 ```text
 mini-framework/
 ├── index.html            loads the TodoMVC app
+├── docs.html             the documentation page (open it at /docs.html)
 ├── package.json          scripts: dev, test
 ├── framework/            HHT.js
 │   ├── index.js          public API (the only file apps import)
@@ -74,19 +113,25 @@ mini-framework/
 │   ├── actions.js        state updates
 │   ├── view.js           the page, as virtual nodes
 │   ├── routes.js         route paths
-│   ├── storage.js        localStorage persistence
+│   ├── storage.js        localStorage persistence (todos and theme)
+│   ├── theme.css         dark-mode styles for the TodoMVC app
 │   └── demo-app.js, page.js   earlier counter demo (used by tests only)
 ├── tests/                framework and TodoMVC tests
 └── docs/
+    ├── favicon.svg               the HHT.js logo (also the docs page icon)
+    ├── documentation.css         styles for docs.html
+    ├── documentation.js          scripts for docs.html
     ├── documentation.md          full framework manual
     ├── documentation-audit.md    documentation audit report
     ├── project.md                original project brief
-    └── TodoMVC-Study.md          TodoMVC behaviour notes
+    ├── TodoMVC-Study.md          TodoMVC behaviour notes
+    ├── Design.md                 early design notes (historical, not the current API)
+    └── Todo.md                   project roadmap checklist
 ```
 
 ## TodoMVC
 
-`npm run dev` opens the TodoMVC app. It supports adding, editing (double-click; Enter/blur saves, Escape cancels), completing, deleting, toggle-all, clear completed, the item counter, and the All / Active / Completed filters (`#/`, `#/active`, `#/completed`). It uses the official `todomvc-app-css` stylesheet.
+`npm run dev` opens the TodoMVC app. It supports adding, editing (double-click; Enter/blur saves, Escape cancels), completing, deleting, toggle-all, clear completed, the item counter, and the All / Active / Completed filters (`#/`, `#/active`, `#/completed`). It also has a **Dark mode** switch. It uses the official `todomvc-app-css` stylesheet, plus `todo/theme.css` for the dark theme.
 
 ### Todo data model
 
@@ -100,9 +145,10 @@ Edit mode is not stored inside the todos. The app keeps the ID of the todo being
 
 ### Persistence
 
-Todos survive a page refresh; edit mode does not.
+Todos and the theme survive a page refresh; edit mode does not.
 
 - **Todos** are saved to `localStorage` under the key `todos-hhtjs` (TodoMVC's `todos-<framework>` naming), in the same `{ id, text, completed }` shape.
+- **The theme** (`"light"` or `"dark"`) is saved under `theme-hhtjs`. Without a saved choice, the system setting decides. `docs.html` reads and writes the same key.
 - **Edit mode** (`editingId`) is not saved: a refresh always starts with no todo being edited.
 - **The current filter** is not saved either: it lives in the URL hash, so a refresh restores it through the router.
 
@@ -110,5 +156,8 @@ Persistence is app code (`todo/storage.js`), not part of the framework. `todo/ap
 
 ## Documentation
 
+- [Documentation page](#documentation-page-docshtml) (`docs.html`): the guide in the browser, at `/docs.html` while `npm run dev` is running
 - [Framework documentation](docs/documentation.md): everything you need to use HHT.js
 - [Project brief](docs/project.md): the original assignment
+- [Design notes](docs/Design.md): early ideas, kept for history (not the current API)
+- [Roadmap](docs/Todo.md): the project checklist
