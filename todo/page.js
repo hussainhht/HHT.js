@@ -1,5 +1,10 @@
 import { createElement } from "../framework/index.js";
-import { increaseCount, decreaseCount, resetCount, setMessage } from "./actions.js";
+import {
+  increaseCount,
+  decreaseCount,
+  resetCount,
+  setMessage,
+} from "./actions.js";
 import { routePaths } from "./routes.js";
 import { appState, counterState } from "./state.js";
 
@@ -7,6 +12,7 @@ function getRouteTitle(route) {
   if (route === routePaths.home) return appState.get().title;
   if (route === routePaths.active) return "Active items";
   if (route === routePaths.completed) return "Completed items";
+  if (route == routePaths.husaain) return "Husaain";
   return "Not found";
 }
 
@@ -29,7 +35,9 @@ export function createPage(route = routePaths.home) {
         onInput: (event) => setMessage(event.target.value),
       }),
       createElement("p", { id: "message-preview" }, [
-        appState.get().message ? `You typed: ${appState.get().message}` : "Type to see the message",
+        appState.get().message
+          ? `You typed: ${appState.get().message}`
+          : "Type to see the message",
       ]),
     ]),
     createElement("nav", { "aria-label": "Main navigation" }, [

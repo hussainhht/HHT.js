@@ -10,12 +10,11 @@ The repository also contains a complete [TodoMVC](https://todomvc.com/) applicat
 
 📖 **Documentation**
 
-- **[Documentation page](#documentation-page-docshtml)** (`docs.html`): the guide as a web page. Run `npm run dev` and open <http://localhost:5173/docs.html>.
+- **[Documentation page](#documentation-page-docshtml)** (`docs.html`): the guide as a web page. Run `npm run dev` and open [http://localhost:5173/docs.html](http://localhost:5173/docs.html).
 - **[Full manual](docs/documentation.md)** (`docs/documentation.md`): the complete reference, readable on GitHub.
 
-## Core features
+## Core featu**DOM abstraction**: `createElement(tag, attrs, children)` builds virtual nodes; attributes use their HTML names (`class`, `for`, `data-*`), with support for boolean attributes and inline styles (string or object).
 
-- **DOM abstraction**: `createElement(tag, attrs, children)` builds virtual nodes; attributes use their HTML names (`class`, `for`, `data-*`), with support for boolean attributes and inline styles (string or object).
 - **Rendering with diffing**: `render(target, vnode)` builds the page the first time and patches only what changed afterwards. Keyed lists (`key`) and element refs (`ref`) are supported.
 - **Events**: `onClick`, `onInput`, `onKeydown`, … next to the other attributes, plus `on(target, event, handler)` for `window`, `document` and other targets.
 - **State**: `state(initialValue)` with `get()`, `set(value | updater)` and `subscribe(listener)`.
@@ -38,9 +37,9 @@ npm test       # runs the test suite with Node's built-in test runner
 
 A development server is needed because the framework is written as ES modules, which browsers don't load from `file://` pages. The same applies to `docs.html`, so don't open it by double-clicking the file.
 
-| Address | Page |
-| --- | --- |
-| `http://localhost:5173/` | the TodoMVC app |
+| Address                             | Page                   |
+| ----------------------------------- | ---------------------- |
+| `http://localhost:5173/`          | the TodoMVC app        |
 | `http://localhost:5173/docs.html` | the documentation page |
 
 If port 5173 is busy, Vite picks the next free one and prints it. To open the documentation directly when the server starts:
@@ -56,7 +55,7 @@ npm run dev -- --open /docs.html
 **How to open it**
 
 1. Run `npm install` once, then `npm run dev`.
-2. Open `/docs.html` on the address Vite prints, usually <http://localhost:5173/docs.html>.
+2. Open `/docs.html` on the address Vite prints, usually [http://localhost:5173/docs.html](http://localhost:5173/docs.html).
 
 **What it offers**
 

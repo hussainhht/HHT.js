@@ -9,7 +9,9 @@ Object.values(routePaths).forEach((path) => router.register(path));
 
 function renderApp() {
   render("#app", router.getCurrentView(createTodoPage));
+  // render("#app", createElement("h1", {}, "hello hussain"));
 }
+
 
 // The stylesheet reads the theme from <html>, outside the rendered tree.
 function applyTheme(theme) {

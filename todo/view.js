@@ -97,33 +97,35 @@ export function createTodoItem(todo, isEditing = false) {
   const classes = [todo.completed && "completed", isEditing && "editing"]
     .filter(Boolean)
     .join(" ");
-  return createElement("li", { key: todo.id, "data-id": todo.id, class: classes || null }, [
-    createElement("div", { class: "view" }, [
+  return createElement(
+    "li",
+    { key: todo.id, "data-id": todo.id, class: classes || null },
+    [
+      createElement("div", { class: "view" }, [
+        createElement("input", {
+          class: "toggle",
+          type: "checkbox",
+          checked: todo.completed,
+          onChange: () => toggleTodo(todo.id),
+        }),
+        createElement("label", { onDblclick: () => startEditing(todo.id) }, [
+          todo.text,
+        ]),
+        createElement("button", {
+          class: "destroy",
+          onClick: () => deleteTodo(todo.id),
+        }),
+      ]),
+      // Controlled on purpose: a cancelled edit is reset by the next render.
       createElement("input", {
-        class: "toggle",
-        type: "checkbox",
-        checked: todo.completed,
-        onChange: () => toggleTodo(todo.id),
+        class: "edit",
+        ref: isEditing ? focusElement : null,
+        value: todo.text,
+        onKeydown: (event) => handleEditKeydown(event, todo.id),
+        onBlur: (event) => handleEditBlur(event, todo.id),
       }),
-      createElement(
-        "label",
-        { onDblclick: () => startEditing(todo.id) },
-        [todo.text],
-      ),
-      createElement("button", {
-        class: "destroy",
-        onClick: () => deleteTodo(todo.id),
-      }),
-    ]),
-    // Controlled on purpose: a cancelled edit is reset by the next render.
-    createElement("input", {
-      class: "edit",
-      ref: isEditing ? focusElement : null,
-      value: todo.text,
-      onKeydown: (event) => handleEditKeydown(event, todo.id),
-      onBlur: (event) => handleEditBlur(event, todo.id),
-    }),
-  ]);
+    ],
+  );
 }
 
 export function createFooter(children = []) {
@@ -212,6 +214,10 @@ export function createTodoPage(route = routePaths.home) {
   const activeCount = todos.filter((todo) => !todo.completed).length;
   const completedCount = todos.length - activeCount;
   const allCompleted = todos.length > 0 && activeCount === 0;
+
+  if (route == routePaths.husaain) {
+    return createElement("h1", {}, "hello hussain");
+  }
 
   return createElement("div", {}, [
     createThemeToggle(theme),
