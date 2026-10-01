@@ -4,7 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HHT.js • TodoMVC</title>
+    <script>
+      // Runs before the first paint so a dark page never flashes light. The
+      // saved choice (shared with docs.html) wins over the system setting.
+      // todo/storage.js loads the same value again once the app starts.
+      var theme;
+      try {
+        theme = localStorage.getItem("theme-hhtjs");
+      } catch (error) {}
+      if (theme !== "light" && theme !== "dark") {
+        theme = matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      document.documentElement.dataset.theme = theme;
+    </script>
     <link rel="stylesheet" href="/node_modules/todomvc-app-css/index.css" />
+    <link rel="stylesheet" href="/todo/theme.css" />
     <script type="module" src="/todo/app.js"></script>
   </head>
   <body>

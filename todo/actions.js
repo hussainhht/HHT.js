@@ -1,4 +1,4 @@
-import { appState, counterState, todoState } from "./state.js";
+import { appState, counterState, themeState, todoState } from "./state.js";
 
 export function increaseCount() {
   counterState.set((current) => ({
@@ -109,5 +109,12 @@ export function saveEdit(id, text) {
       todo.id === id ? { ...todo, text: trimmed } : todo,
     ),
     editingId: null,
+  }));
+}
+
+export function toggleTheme() {
+  themeState.set((current) => ({
+    ...current,
+    theme: current.theme === "dark" ? "light" : "dark",
   }));
 }

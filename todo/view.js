@@ -8,10 +8,11 @@ import {
   saveEdit,
   startEditing,
   toggleAll,
+  toggleTheme,
   toggleTodo,
 } from "./actions.js";
 import { routePaths } from "./routes.js";
-import { todoState } from "./state.js";
+import { themeState, todoState } from "./state.js";
 
 export function createTodoApp(children = []) {
   return createElement("section", { class: "todoapp" }, children);
@@ -176,6 +177,23 @@ export function createInfoFooter() {
   ]);
 }
 
+// A switch: `aria-pressed` carries the state, so the label stays "Dark mode".
+export function createThemeToggle(theme = "light") {
+  return createElement(
+    "button",
+    {
+      class: "theme-toggle",
+      type: "button",
+      "aria-pressed": String(theme === "dark"),
+      onClick: toggleTheme,
+    },
+    [
+      createElement("span", { class: "theme-toggle-track" }),
+      createElement("span", { class: "theme-toggle-label" }, ["Dark mode"]),
+    ],
+  );
+}
+
 // Only filters what is rendered; state keeps every todo.
 function filterTodos(todos, route) {
   if (route === routePaths.active) {
@@ -190,11 +208,13 @@ function filterTodos(todos, route) {
 // render() takes a single root, so the app and info footer share a div.
 export function createTodoPage(route = routePaths.home) {
   const { todos, editingId } = todoState.get();
+  const { theme } = themeState.get();
   const activeCount = todos.filter((todo) => !todo.completed).length;
   const completedCount = todos.length - activeCount;
   const allCompleted = todos.length > 0 && activeCount === 0;
 
   return createElement("div", {}, [
+    createThemeToggle(theme),
     createTodoApp([
       createHeader(),
       createMainSection(

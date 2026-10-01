@@ -1,0 +1,170 @@
+/* Loaded after todomvc-app-css, which has no dark theme of its own. The app
+   sets data-theme="dark" on <html>; the light look is the stylesheet's
+   default, so only the dark overrides and the switch are defined here. */
+
+html[data-theme="dark"] {
+	color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+	background: #16181d;
+	color: #e3e3e3;
+}
+
+html[data-theme="dark"] .todoapp {
+	background: #22252b;
+	box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5),
+	            0 25px 50px 0 rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="dark"] .todoapp h1 {
+	color: #d9575e;
+}
+
+html[data-theme="dark"] .todoapp input::placeholder {
+	color: rgba(255, 255, 255, 0.4);
+}
+
+html[data-theme="dark"] .new-todo,
+html[data-theme="dark"] .edit {
+	box-shadow: inset 0 -1px 5px 0 rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme="dark"] .edit {
+	border-color: #565b64;
+	background: #2c3037;
+}
+
+html[data-theme="dark"] .main,
+html[data-theme="dark"] .footer {
+	border-top-color: #363a42;
+}
+
+html[data-theme="dark"] .toggle-all + label:before {
+	color: #7d838d;
+}
+
+html[data-theme="dark"] .toggle-all:checked + label:before {
+	color: #e3e3e3;
+}
+
+html[data-theme="dark"] .todo-list li {
+	border-bottom-color: #30343b;
+}
+
+html[data-theme="dark"] .todo-list li label {
+	color: #e3e3e3;
+}
+
+html[data-theme="dark"] .todo-list li.completed label {
+	color: #7d838d;
+}
+
+html[data-theme="dark"] .todo-list li .destroy {
+	color: #8a9099;
+}
+
+html[data-theme="dark"] .todo-list li .destroy:hover,
+html[data-theme="dark"] .todo-list li .destroy:focus {
+	color: #e08a8a;
+}
+
+/* The two stacked "pages" under the footer: same colour as the card. */
+html[data-theme="dark"] .footer:before {
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.5),
+	            0 8px 0 -3px #22252b,
+	            0 9px 1px -3px rgba(0, 0, 0, 0.5),
+	            0 16px 0 -6px #22252b,
+	            0 17px 2px -6px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme="dark"] .info {
+	color: #9aa0aa;
+	text-shadow: none;
+}
+
+/* Theme switch, top right of the page. */
+.theme-toggle {
+	position: absolute;
+	top: 16px;
+	right: 16px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 7px 14px 7px 8px;
+	border: 1px solid #d6d6d6;
+	border-radius: 999px;
+	background: #fff;
+	color: #484848;
+	font-size: 13px;
+	font-weight: 400;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.theme-toggle-track {
+	position: relative;
+	width: 34px;
+	height: 18px;
+	border-radius: 999px;
+	background: #8a8a8a;
+	transition: background 0.2s;
+}
+
+.theme-toggle-track:after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: #fff;
+	transition: transform 0.2s;
+}
+
+.theme-toggle[aria-pressed="true"] .theme-toggle-track {
+	background: #2f8a78;
+}
+
+.theme-toggle[aria-pressed="true"] .theme-toggle-track:after {
+	transform: translateX(16px);
+}
+
+html[data-theme="dark"] .theme-toggle {
+	border-color: #454a53;
+	background: #2c3037;
+	color: #e3e3e3;
+}
+
+html[data-theme="dark"] .theme-toggle-track {
+	background: #7d838d;
+}
+
+html[data-theme="dark"] .theme-toggle[aria-pressed="true"] .theme-toggle-track {
+	background: #3ea390;
+}
+
+/* Narrow screens: the label would sit on top of the "todos" heading, so only
+   the switch stays visible (the label is still read by screen readers). */
+@media (max-width: 430px) {
+	.theme-toggle {
+		padding: 7px 8px;
+	}
+
+	.theme-toggle-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.theme-toggle-track,
+	.theme-toggle-track:after {
+		transition: none;
+	}
+}

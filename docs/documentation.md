@@ -133,8 +133,6 @@ Import only what you use:
 import { createElement, render } from "./framework/index.js";
 ```
 
-There is **no default export and no `hht` object**. Code such as `import hht from "./hht.js"` or `hht.div(...)` belongs to an early design (`docs/Design.md`) that was never implemented, and does not work.
-
 The path is relative to **your** file. The examples in this guide assume your JavaScript file sits in the project root, next to `index.html`. From a file inside `todo/`, write `"../framework/index.js"`, as `todo/app.js` does.
 
 | Export            | Use it to                                                             | Section                                |
@@ -1851,7 +1849,6 @@ Other Markdown files in the repository are project notes, not user documentation
 | File                            | What it is                                                                                                                       |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `docs/project.md`             | The original project brief                                                                                                       |
-| `docs/Design.md`              | **Historical** early design ideas (`hht.div()`, `hht.mount()`, `hht.router({...})`). That API was never implemented. |
 | `docs/TodoMVC-Study.md`       | Notes on TodoMVC's required behaviour and markup                                                                                 |
 | `Todo.md`                     | The development roadmap/checklist                                                                                                |
 | `PROJECT-AUDIT.md`            | A code audit from an earlier commit; several gaps it lists have since been fixed                                                 |

@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f8fafc" />
+    <meta
+      name="description"
+      content="Learn HHT.js: a small JavaScript framework for DOM creation, events, state, rendering, and hash routing."
+    />
+    <title>Documentation · HHT.js</title>
+    <link rel="icon" type="image/svg+xml" href="/docs/favicon.svg" />
+    <script>
+      // Runs before the first paint so a dark page never flashes light. The
+      // saved choice (shared with the todo app) wins over the system setting.
+      var theme;
+      try {
+        theme = localStorage.getItem("theme-hhtjs");
+      } catch (error) {}
+      if (theme !== "light" && theme !== "dark") {
+        theme = matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+      }
+      document.documentElement.dataset.theme = theme;
+    </script>
+    <link rel="stylesheet" href="/docs/documentation.css" />
+    <script type="module" src="/docs/documentation.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a
+          class="brand"
+          href="#introduction"
+          aria-label="HHT.js documentation home"
+        >
+          <span class="brand-mark" aria-hidden="true">H<span>·</span></span>
+          <span>HHT<span class="brand-dot">.</span>js</span>
+        </a>
+        <span class="header-divider" aria-hidden="true"></span>
+        <span class="header-title">Documentation</span>
+        <div class="header-actions">
+          <span class="header-status"
+            ><span aria-hidden="true"></span> Built from the current API</span
+          >
+          <button
+            class="theme-toggle"
+            type="button"
+            aria-label="Dark mode"
+            aria-pressed="false"
+          >
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"></path>
+            </svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path
+                d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"
+              ></path>
+            </svg>
+          </button>
+          <button
+            class="menu-button"
+            type="button"
+            aria-label="Open documentation menu"
+            aria-controls="sidebar"
+            aria-expanded="false"
+          >
+            <span></span><span></span><span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="mobile-scrim" aria-hidden="true"></div>
+    <div class="page-shell">
+      <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+        <div class="sidebar-inner">
+          <div class="sidebar-top">
+            <label class="search-label" for="nav-search">Find a section</label>
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="6.5"></circle>
+                <path d="m16 16 4.5 4.5"></path>
+              </svg>
+              <input
+                id="nav-search"
+                type="search"
+                placeholder="Search headings…"
+                autocomplete="off"
+              />
+            </div>
+            <p class="search-empty" hidden>No matching sections.</p>
+          </div>
+          <nav class="section-nav" aria-label="On this page">
+            <div class="nav-group">
+              <p class="nav-heading">Start here</p>
+              <a href="#introduction">Introduction</a>
+              <a href="#getting-started">Getting started</a>
+              <a href="#project-setup">Project setup</a>
+              <a href="#importing">Importing HHT.js</a>
+            </div>
+            <div class="nav-group">
+              <p class="nav-heading">Building UI</p>
+              <a href="#elements">Creating elements</a>
+              <a href="#attributes">Attributes &amp; styles</a>
+              <a href="#children">Child elements</a>
+              <a href="#text-children">Text &amp; conditional children</a>
+              <a href="#events">Events</a>
+              <a href="#state">State management</a>
+              <a href="#rendering">Rendering behavior</a>
+              <a href="#mounting">Mounting the app</a>
+            </div>
+            <div class="nav-group">
+              <p class="nav-heading">Routing</p>
+              <a href="#routing">Routes</a>
+              <a href="#navigation">Navigation</a>
+            </div>
+            <div class="nav-group">
+              <p class="nav-heading">Examples</p>
+              <a href="#counter-example">Complete counter</a>
+              <a href="#todo-example">Small todo app</a>
+            </div>
+            <div class="nav-group">
+              <p class="nav-heading">Understand more</p>
+              <a href="#api-reference">Public API reference</a>
+              <a href="#framework-concepts">Framework concepts</a>
+              <a href="#inversion-of-control">Inversion of control</a>
+              <a href="#troubleshooting">Troubleshooting</a>
+            </div>
+          </nav>
+          <div class="sidebar-footer">
+            Seven public functions.<br />One small framework.
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content" id="main-content">
+        <div class="content-width">
+          <section class="hero" id="introduction" aria-labelledby="hero-title">
+            <div class="hero-grid" aria-hidden="true"></div>
+            <div class="hero-content">
+              <span class="eyebrow"
+                ><span class="eyebrow-line"></span> The HHT.js guide</span
+              >
+              <h1 id="hero-title">Build from the<br /><span>DOM up.</span></h1>
+              <p class="hero-lede">
+                <strong>HHT.js</strong> is a lightweight JavaScript framework
+                for creating DOM elements, handling events, managing state, and
+                following URL hash routes.
+              </p>
+              <p class="hero-detail">
+                It favors readable JavaScript and small, explicit steps. Its
+                abstractions are simple enough to study, while supporting a
+                working TodoMVC application.
+              </p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="#getting-started"
+                  >Start building <span aria-hidden="true">↗</span></a
+                >
+                <a class="button button-secondary" href="#api-reference"
+                  >Explore the API <span aria-hidden="true">→</span></a
+                >
+              </div>
+            </div>
+            <div class="hero-side" aria-hidden="true">
+              <span class="orbit orbit-one"></span
+              ><span class="orbit orbit-two"></span
+              ><span class="orbit-core">{ }</span
+              ><span class="orbit-caption">describe → render → update</span>
+            </div>
+          </section>
+
+          <div class="intro-strip" aria-label="HHT.js principles">
+            <div>
+              <span class="strip-icon">01</span><strong>Simple by design</strong
+              ><span>Plain objects and functions</span>
+            </div>
+            <div>
+              <span class="strip-icon">02</span><strong>Readable APIs</strong
+              ><span>Named exports, normal events</span>
+            </div>
+            <div>
+              <span class="strip-icon">03</span
+              ><strong>Minimal abstraction</strong
+              ><span>Explicit render subscriptions</span>
+            </div>
+          </div>
+
+          <section class="doc-section" id="getting-started">
+            <div class="section-kicker">01 / Start here</div>
+            <h2>Getting started</h2>
+            <p>
+              HHT.js is source code in this repository, with no separate
+              framework package to install. A view is a function that returns a
+              <em>virtual node</em>: a plain description of an element.
+              <code>render()</code> turns that description into browser DOM.
+            </p>
+            <div class="callout callout-note">
+              <span class="callout-symbol" aria-hidden="true">↗</span>
+              <div>
+                <strong>The key idea</strong>
+                <p>
+                  Describe what the page should look like now. When data
+                  changes, call <code>render()</code> again with a fresh
+                  description.
+                </p>
+              </div>
+            </div>
+            <h3>Quick start</h3>
+            <p>
+              Save this as <code>app.js</code> in the project root. Use the
+              separate <code>app.html</code> shell in Project setup below; it
+              loads <code>/app.js</code> and includes the matching
+              <code>&lt;div id="app"&gt;&lt;/div&gt;</code>.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>import { createElement, render } from "./framework/index.js";
+
+const greeting = createElement("h1", { class: "greeting" }, [
+  "Hello, HHT.js!",
+]);
+
+render("#app", greeting);</code></pre>
+            <p>
+              The browser receives a real heading:
+              <code>&lt;h1 class="greeting"&gt;Hello, HHT.js!&lt;/h1&gt;</code>.
+            </p>
+          </section>
+
+          <section class="doc-section" id="project-setup">
+            <div class="section-kicker">02 / Start here</div>
+            <h2>Project setup</h2>
+            <p>
+              The project uses Vite to serve native JavaScript modules. Use
+              Node.js 20.19+ in the 20.x line or Node.js 22.12+, install
+              dependencies, start the server, then open the address Vite prints.
+              The root page is the existing TodoMVC app; type
+              <code>/docs</code> to open this guide.
+            </p>
+            <pre data-language="Terminal"><code>npm install
+npm run dev</code></pre>
+            <p>
+              Run <code>npm test</code> in another terminal for the automated
+              framework and TodoMVC tests.
+            </p>
+            <div class="setup-grid">
+              <div>
+                <span class="setup-number">1</span><strong>HTML target</strong>
+                <p>
+                  Give your page an element such as
+                  <code>&lt;div id="app"&gt;&lt;/div&gt;</code>.
+                </p>
+              </div>
+              <div>
+                <span class="setup-number">2</span
+                ><strong>Module script</strong>
+                <p>
+                  Load your app with
+                  <code
+                    >&lt;script type="module"
+                    src="/app.js"&gt;&lt;/script&gt;</code
+                  >.
+                </p>
+              </div>
+              <div>
+                <span class="setup-number">3</span><strong>First render</strong>
+                <p>
+                  Call <code>render("#app", view())</code> after the target
+                  exists.
+                </p>
+              </div>
+            </div>
+            <p>
+              Save this complete HTML shell as <code>app.html</code> in the
+              project root, then open <code>/app.html</code> through Vite:
+            </p>
+            <pre data-language="HTML"><code>&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8" /&gt;
+    &lt;title&gt;My HHT.js app&lt;/title&gt;
+    &lt;script type="module" src="/app.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;&lt;div id="app"&gt;&lt;/div&gt;&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+          </section>
+
+          <section class="doc-section" id="importing">
+            <div class="section-kicker">03 / Start here</div>
+            <h2>Importing HHT.js</h2>
+            <p>
+              The public entry point is <code>framework/index.js</code>. It
+              provides seven named exports. Import only the functions your file
+              uses; the relative path depends on where that file lives.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>// From a file in the project root:
+import { createElement, render, state } from "./framework/index.js";
+
+// From a file inside todo/:
+// import { createElement, render, state } from "../framework/index.js";</code></pre>
+            <p>
+              There is no default export or <code>hht.div()</code> namespace.
+              Framework modules also export internal helpers, so application
+              code should import from <code>framework/index.js</code>. Short
+              examples below assume the named functions they use have been
+              imported from this entry point.
+            </p>
+          </section>
+
+          <section class="doc-section" id="elements">
+            <div class="section-kicker">04 / Building UI</div>
+            <h2>Creating elements</h2>
+            <p>
+              <code>createElement(tag, attrs, children)</code> builds a virtual
+              node. It does not create browser DOM until you pass that node to
+              <code>render()</code> or <code>mount()</code>. The tag is an HTML
+              tag name; attributes are an object; children are one value or an
+              array.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>const heading = createElement("h1", {}, ["Hello"]);
+const paragraph = createElement("p", {}, ["A short explanation."]);
+const button = createElement("button", { type: "button" }, ["Save"]);
+const input = createElement("input", {
+  type: "text",
+  placeholder: "Your name",
+});
+
+const card = createElement("div", { class: "card" }, [
+  heading,
+  paragraph,
+  button,
+  input,
+]);</code></pre>
+            <p>
+              The <code>card</code> description renders as a
+              <code>div</code> containing a heading, paragraph, button, and
+              input. There are no built-in tag shortcuts: use
+              <code>createElement("div", ...)</code> for a <code>div</code>.
+            </p>
+          </section>
+
+          <section class="doc-section" id="attributes">
+            <div class="section-kicker">05 / Building UI</div>
+            <h2>Attributes &amp; styles</h2>
+            <p>
+              Pass HTML attribute names in the second argument. Use
+              <code>class</code> and <code>for</code>, not JavaScript property
+              names such as <code>className</code>. Values of
+              <code>null</code> or <code>undefined</code> remove an attribute on
+              a later render.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>const field = createElement("input", {
+  id: "task-name",
+  class: "field",
+  type: "text",
+  placeholder: "Add a task",
+  value: "Read the guide",
+  disabled: false,
+});
+
+const checkbox = createElement("input", {
+  type: "checkbox",
+  checked: true,
+});</code></pre>
+            <p>
+              <code>checked</code>, <code>disabled</code>,
+              <code>selected</code>, and <code>muted</code> also sync their DOM
+              properties on each render. For a boolean HTML attribute,
+              <code>false</code>, <code>null</code>, or
+              <code>undefined</code> removes it. A string such as
+              <code>"false"</code> still leaves the attribute present and
+              therefore on.
+            </p>
+            <h3>Inline styles</h3>
+            <p>
+              <code>style</code> accepts a CSS string or an object of DOM style
+              property names. Object values do not get units added
+              automatically.
+            </p>
+            <pre data-language="JavaScript"><code>createElement("p", {
+  style: { color: "#0d9488", marginTop: "16px" },
+}, ["Ready to build."]);
+
+createElement("p", {
+  style: "color: #0d9488; margin-top: 16px",
+}, ["The same style as a string."]);</code></pre>
+            <p>
+              <code>key</code> and <code>ref</code> are special HHT.js
+              attributes. Keys identify siblings during list updates; a ref
+              callback receives a DOM element after rendering and
+              <code>null</code> when tracked content is removed.
+            </p>
+          </section>
+
+          <section class="doc-section" id="children">
+            <div class="section-kicker">06 / Building UI</div>
+            <h2>Child elements</h2>
+            <p>
+              Pass nested virtual nodes in the third argument to create an HTML
+              tree. Nested arrays are flattened, so <code>map()</code> results
+              fit naturally into a child list.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>const names = ["Ada", "Lin", "Sam"];
+
+const list = createElement("ul", { class: "names" }, [
+  names.map((name) =&gt;
+    createElement("li", { key: name }, [name]),
+  ),
+]);</code></pre>
+            <p>
+              This produces one <code>ul</code> with three
+              <code>li</code> elements. Give each sibling a stable, unique
+              <code>key</code> when rendering a changing list. HHT.js uses keyed
+              updates when every sibling in the old and new lists has a key.
+              Keys are not written as HTML attributes.
+            </p>
+          </section>
+
+          <section class="doc-section" id="text-children">
+            <div class="section-kicker">07 / Building UI</div>
+            <h2>Text &amp; conditional children</h2>
+            <p>
+              Strings and numbers become text nodes. Nested arrays are
+              flattened, while <code>null</code>, <code>undefined</code>, and
+              boolean children are omitted. This makes conditional content
+              straightforward.
+            </p>
+            <pre data-language="JavaScript"><code>const count = 3;
+const showTip = true;
+
+const summary = createElement("section", {}, [
+  createElement("h2", {}, ["Tasks"]),
+  "Remaining: ",
+  count,
+  showTip ? createElement("p", {}, ["Keep going!"]) : null,
+]);</code></pre>
+            <p>
+              <code>0</code> is a valid text child. For conditional elements,
+              prefer a ternary or a condition that produces <code>null</code>;
+              <code>items.length &amp;&amp; node</code> would render
+              <code>0</code> when the array is empty. Function children are not
+              a reactive feature and fail when rendered.
+            </p>
+          </section>
+
+          <section class="doc-section" id="events">
+            <div class="section-kicker">08 / Building UI</div>
+            <h2>Events</h2>
+            <p>
+              Use an <code>on…</code> attribute to let HHT.js attach a native
+              DOM event listener. The handler receives the normal browser event;
+              <code>event.target</code>, <code>event.key</code>, and
+              <code>event.preventDefault()</code> work as usual.
+            </p>
+            <pre data-language="JavaScript"><code>createElement("button", {
+  onClick: (event) =&gt; {
+    console.log("Clicked", event.currentTarget);
+  },
+}, ["Click me"]);
+
+createElement("input", {
+  onInput: (event) =&gt; console.log(event.target.value),
+  onChange: (event) =&gt; console.log("Committed", event.target.value),
+  onKeydown: (event) =&gt; {
+    if (event.key === "Enter") console.log("Submitted");
+  },
+});</code></pre>
+            <p>
+              Other native events work the same way: <code>onSubmit</code>,
+              <code>onBlur</code>, and <code>onDblclick</code> are useful
+              examples. <code>onInput</code> follows each text edit;
+              <code>onChange</code> follows the browser’s native change event. A
+              normal function handler receives its element as <code>this</code>.
+              HHT.js lowercases the part after <code>on</code>:
+              <code>onDblclick</code> and <code>onDblClick</code> both map to
+              <code>dblclick</code>; <code>onDoubleClick</code> maps to the wrong
+              event.
+              Handler values must be functions, <code>null</code>, or
+              <code>undefined</code>.
+            </p>
+            <h3>Events outside the rendered tree</h3>
+            <p>
+              The public <code>on()</code> helper handles <code>window</code>,
+              <code>document</code>, and other event targets. It returns a
+              function that removes that listener.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>import { on } from "./framework/index.js";
+
+const stopListening = on(window, "resize", () =&gt; {
+  console.log(window.innerWidth);
+});
+
+// Call when this listener is no longer needed:
+stopListening();</code></pre>
+          </section>
+
+          <section class="doc-section" id="state">
+            <div class="section-kicker">09 / State</div>
+            <h2>State management</h2>
+            <p>
+              <code>state(initialValue)</code> returns an object with
+              <code>get()</code>, <code>set()</code>, and
+              <code>subscribe()</code>. Subscribers are called synchronously
+              whenever <code>set()</code> runs. An updater function receives the
+              current value and returns the next value.
+            </p>
+            <pre data-language="JavaScript"><code>const count = state(0);
+count.get();                    // 0
+count.set(1);                   // replace the value
+count.set((current) =&gt; current + 1); // 2
+
+const stop = count.subscribe((value) =&gt; {
+  console.log("Count changed:", value);
+});
+
+count.set(3); // logs "Count changed: 3"
+stop();       // removes this subscription</code></pre>
+            <p>
+              A subscription does not run when created.
+              <code>set()</code> notifies even if the new value equals the old
+              one; HHT.js does not compare values. For arrays and objects,
+              return a new value when updating so your own code can reason
+              clearly about changes.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>const todos = state([{ id: 1, text: "Read", completed: false }]);
+
+todos.set((items) =&gt; [
+  ...items,
+  { id: 2, text: "Build", completed: false },
+]);
+
+todos.set((items) =&gt; items.map((item) =&gt;
+  item.id === 1 ? { ...item, completed: true } : item,
+));</code></pre>
+          </section>
+
+          <section class="doc-section" id="rendering">
+            <div class="section-kicker">10 / State</div>
+            <h2>Rendering behavior</h2>
+            <p>
+              <code>render(target, node)</code> owns one root node inside the
+              target. On the first call it creates DOM. On later calls it
+              compares the old and new virtual nodes, updating changed text,
+              attributes, event handlers, and children. Compatible elements can
+              stay in place; stable keys help preserve list items when they
+              move.
+            </p>
+            <div class="flow" aria-label="State update flow">
+              <span>User event</span><b aria-hidden="true">→</b
+              ><span><code>state.set()</code></span
+              ><b aria-hidden="true">→</b><span>Subscriber runs</span
+              ><b aria-hidden="true">→</b><span><code>render()</code></span
+              ><b aria-hidden="true">→</b><span>DOM updates</span>
+            </div>
+            <p>
+              The framework does not automatically connect state to rendering.
+              Register your render function as a subscriber, then call it once
+              to draw the initial page:
+            </p>
+            <pre data-language="JavaScript"><code>const count = state(0);
+
+function view() {
+  return createElement("p", {}, ["Count: ", count.get()]);
+}
+
+function renderApp() {
+  render("#app", view());
+}
+
+count.subscribe(renderApp);
+renderApp();</code></pre>
+            <p>
+              Calling <code>render()</code> with a new tree is the update step;
+              changing a virtual node or its attributes in place is not a
+              supported update pattern.
+            </p>
+          </section>
+
+          <section class="doc-section" id="mounting">
+            <div class="section-kicker">11 / State</div>
+            <h2>Mounting the application</h2>
+            <p>
+              Start an app by selecting an existing container and calling
+              <code>render()</code> for its first view. The target can be a CSS
+              selector string or a DOM element. If a selector is invalid or
+              finds nothing, HHT.js throws an error.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>import { createElement, render, unmount } from "./framework/index.js";
+
+render("#app", createElement("main", {}, ["Ready"]));
+
+// When the app should be removed:
+unmount("#app");</code></pre>
+            <p>
+              <code>mount(target, node)</code> is also public. Each call appends
+              another node and does not track updates. Use it for static
+              content. Use <code>render()</code> for a stateful app.
+              <code>unmount()</code> empties the target and clears any tracked
+              render tree; it does not cancel state subscriptions or listeners
+              created with <code>on()</code>.
+            </p>
+          </section>
+
+          <section class="doc-section" id="routing">
+            <div class="section-kicker">12 / Routing</div>
+            <h2>Routes</h2>
+            <p>
+              <code>createRouter()</code> makes a hash router. Its app URLs look
+              like <code>/#/</code> and <code>/#/about</code>; the route lives
+              after <code>#</code>. Register exact paths, subscribe your render
+              function, then start the router.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>import { createElement, createRouter, render } from "./framework/index.js";
+
+const router = createRouter();
+router.register("/").register("/about");
+
+function page(path) {
+  return path === "/about"
+    ? createElement("h1", {}, ["About"])
+    : createElement("h1", {}, ["Home"]);
+}
+
+function renderApp() {
+  render("#app", router.getCurrentView(page));
+}
+
+router.subscribe(renderApp);
+router.start();
+renderApp();</code></pre>
+            <p>
+              <code>getCurrentView(page)</code> calls
+              <code>page(path)</code> for a registered route. Unknown paths
+              return the router’s built-in 404 view. Route matching is exact and
+              case-sensitive; there are no route parameters or path patterns.
+            </p>
+          </section>
+
+          <section class="doc-section" id="navigation">
+            <div class="section-kicker">13 / Routing</div>
+            <h2>Navigation</h2>
+            <p>
+              Use <code>router.navigate("/about")</code> or a regular hash link.
+              <code>router.getCurrentRoute()</code> reads the current normalized
+              path. Browser back and forward navigation fires
+              <code>hashchange</code>; a started router updates its subscribers.
+              Continuing the router example above:
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>router.subscribe((path) =&gt; {
+  console.log(path, router.getCurrentRoute());
+});
+router.navigate("/about"); // subscriber logs after hashchange
+
+const link = createElement("a", { href: "#/" }, ["Home"]);</code></pre>
+            <div class="callout">
+              <span class="callout-symbol" aria-hidden="true">#</span>
+              <div>
+                <strong>Two different routes</strong>
+                <p>
+                  This documentation page is served at the real pathname
+                  <code>/docs</code>. HHT.js routing is for hash paths such as
+                  <code>/#/about</code> inside an application page.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section class="doc-section" id="counter-example">
+            <div class="section-kicker">14 / Examples</div>
+            <h2>Complete counter example</h2>
+            <p>
+              Save the following as <code>counter.html</code> and
+              <code>counter.js</code> in the project root. Open
+              <code>/counter.html</code> through the dev server. The click
+              handler updates state, the subscription calls
+              <code>renderApp()</code>, and HHT.js updates the text in the DOM.
+            </p>
+            <pre data-language="HTML"><code>&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8" /&gt;
+    &lt;title&gt;HHT.js counter&lt;/title&gt;
+    &lt;script type="module" src="/counter.js"&gt;&lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;&lt;div id="app"&gt;&lt;/div&gt;&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <pre
+              data-language="JavaScript"
+            ><code>import { createElement, render, state } from "./framework/index.js";
+
+const count = state(0);
+
+function Counter() {
+  return createElement("main", { class: "counter" }, [
+    createElement("h1", {}, ["Counter"]),
+    createElement("p", {}, ["Count: ", count.get()]),
+    createElement("button", {
+      type: "button",
+      onClick: () =&gt; count.set((current) =&gt; current + 1),
+    }, ["Add one"]),
+    createElement("button", {
+      type: "button",
+      onClick: () =&gt; count.set(0),
+    }, ["Reset"]),
+  ]);
+}
+
+function renderApp() {
+  render("#app", Counter());
+}
+
+count.subscribe(renderApp);
+renderApp();</code></pre>
+            <p>
+              The initial <code>renderApp()</code> matters because
+              <code>subscribe()</code> only reacts to future
+              <code>set()</code> calls.
+            </p>
+          </section>
+
+          <section class="doc-section" id="todo-example">
+            <div class="section-kicker">15 / Examples</div>
+            <h2>Small todo app</h2>
+            <p>
+              This smaller example keeps todos in an array, adds one on Enter,
+              and toggles completion. Save it as
+              <code>todo-example.js</code> and use the counter HTML shell above
+              with <code>src="/todo-example.js"</code>. The project’s full
+              TodoMVC adds editing, filters, and persistence.
+            </p>
+            <pre
+              data-language="JavaScript"
+            ><code>import { createElement, render, state } from "./framework/index.js";
+
+const todos = state([]);
+let nextId = 1;
+
+function addTodo(event) {
+  if (event.key !== "Enter" || event.isComposing) return;
+  const text = event.target.value.trim();
+  if (!text) return;
+  event.target.value = "";
+  todos.set((items) =&gt; [
+    ...items,
+    { id: nextId++, text, completed: false },
+  ]);
+}
+
+function toggleTodo(id) {
+  todos.set((items) =&gt; items.map((item) =&gt;
+    item.id === id
+      ? { ...item, completed: !item.completed }
+      : item,
+  ));
+}
+
+function TodoApp() {
+  return createElement("main", {}, [
+    createElement("h1", {}, ["My todos"]),
+    createElement("input", {
+      placeholder: "Add a task and press Enter",
+      onKeydown: addTodo,
+    }),
+    createElement("ul", {}, todos.get().map((todo) =&gt;
+      createElement("li", { key: todo.id }, [
+        createElement("input", {
+          type: "checkbox",
+          checked: todo.completed,
+          onChange: () =&gt; toggleTodo(todo.id),
+        }),
+        " ", todo.text,
+      ]),
+    )),
+  ]);
+}
+
+function renderApp() {
+  render("#app", TodoApp());
+}
+
+todos.subscribe(renderApp);
+renderApp();</code></pre>
+          </section>
+
+          <section class="doc-section api-section" id="api-reference">
+            <div class="section-kicker">16 / Reference</div>
+            <h2>Public API reference</h2>
+            <p>
+              The entry point exports exactly these seven named functions. The
+              methods returned by <code>state()</code> and
+              <code>createRouter()</code> are described with their parent
+              functions below.
+            </p>
+            <div class="api-overview">
+              <a href="#api-create-element"
+                ><code>createElement</code><span>Describe an element →</span></a
+              >
+              <a href="#api-render"
+                ><code>render</code><span>Show and update a view →</span></a
+              >
+              <a href="#api-mount"
+                ><code>mount</code><span>Append static content →</span></a
+              >
+              <a href="#api-unmount"
+                ><code>unmount</code><span>Clear a target →</span></a
+              >
+              <a href="#api-state"
+                ><code>state</code><span>Hold a value →</span></a
+              >
+              <a href="#api-create-router"
+                ><code>createRouter</code><span>Follow hash routes →</span></a
+              >
+              <a href="#api-on"
+                ><code>on</code><span>Listen to events →</span></a
+              >
+            </div>
+
+            <article class="api-entry" id="api-create-element">
+              <h3><code>createElement(tag, attrs?, children?)</code></h3>
+              <p>
+                <strong>Purpose.</strong> Describe an HTML element without
+                touching the DOM.
+              </p>
+              <pre
+                data-language="JavaScript"
+              ><code>createElement("p", { class: "note" }, ["Hello"]);</code></pre>
+              <dl>
+                <dt>Parameters</dt>
+                <dd>
+                  <code>tag</code> (string): HTML tag name.
+                  <code>attrs</code> (object, default <code>{}</code>):
+                  attributes, events, style, key, or ref.
+                  <code>children</code> (value or array, default
+                  <code>[]</code>): text, numbers, virtual nodes, or nested
+                  arrays.
+                </dd>
+                <dt>Returns</dt>
+                <dd>
+                  A plain virtual-node object with <code>tag</code>,
+                  <code>attrs</code>, and normalized <code>children</code>.
+                </dd>
+                <dt>Notes</dt>
+                <dd>
+                  Only the third argument supplies children; extra child
+                  arguments are ignored. <code>null</code> attributes cause a
+                  render error.
+                </dd>
+              </dl>
+            </article>
+
+            <article class="api-entry" id="api-render">
+              <h3><code>render(target, node)</code></h3>
+              <p>
+                <strong>Purpose.</strong> Render one root virtual node and patch
+                that target on later calls.
+              </p>
+              <pre
+                data-language="JavaScript"
+              ><code>render("#app", createElement("p", {}, ["Updated view"]));</code></pre>
+              <dl>
+                <dt>Parameters</dt>
+                <dd>
+                  <code>target</code> (CSS selector string or DOM element):
+                  existing container. <code>node</code> (virtual node, string,
+                  or number): new root content.
+                </dd>
+                <dt>Returns</dt>
+                <dd><code>undefined</code>.</dd>
+                <dt>Notes</dt>
+                <dd>
+                  Call after state changes; state does not call it
+                  automatically. A single root occupies the container.
+                </dd>
+              </dl>
+            </article>
+
+            <article class="api-entry" id="api-mount">
+              <h3><code>mount(target, node)</code></h3>
+              <p>
+                <strong>Purpose.</strong> Append a node to an existing
+                container.
+              </p>
+              <pre
+                data-language="JavaScript"
+              ><code>mount("#app", createElement("p", {}, ["Static note"]));</code></pre>
+              <dl>
+                <dt>Parameters</dt>
+                <dd>
+                  <code>target</code> (CSS selector string or DOM element):
+                  container. <code>node</code> (virtual node, string, or
+                  number): content to append.
+                </dd>
+                <dt>Returns</dt>
+                <dd><code>undefined</code>.</dd>
+                <dt>Notes</dt>
+                <dd>
+                  Each call appends another node, and these appends are not
+                  tracked for future patching. Prefer <code>render()</code> for
+                  an app that updates.
+                </dd>
+              </dl>
+            </article>
+
+            <article class="api-entry" id="api-unmount">
+              <h3><code>unmount(target)</code></h3>
+              <p>
+                <strong>Purpose.</strong> Empty a container and clear its
+                tracked render history.
+              </p>
+              <pre
+                data-language="JavaScript"
+              ><code>unmount("#app");</code></pre>
+              <dl>
+                <dt>Parameters</dt>
+                <dd>
+                  <code>target</code> (CSS selector string or DOM element):
+                  container to clear.
+                </dd>
+                <dt>Returns</dt>
+                <dd><code>undefined</code>.</dd>
+                <dt>Notes</dt>
+                <dd>
+                  Tracked refs from <code>render()</code> receive
+                  <code>null</code>. Content added with <code>mount()</code> is
+                  cleared, but its refs are not tracked for cleanup.
+                </dd>
+              </dl>
+            </article>
+
+            <article class="api-entry" id="api-state">
+              <h3><code>state(initialValue)</code></h3>
+              <p>
+                <strong>Purpose.</strong> Store a value and notify subscribers
+                when it is set.
+              </p>
+              <pre data-language="JavaScript"><code>const score = state(0);
+const stop = score.subscribe((value) =&gt; console.log(value));
+score.set((previous) =&gt; previous + 1);
+console.log(score.get()); // 1
+stop();</code></pre>
+              <dl>
+                <dt>Parameters</dt>
+                <dd><code>initialValue</code> (any type): starting value.</dd>
+                <dt>Returns</dt>
+                <dd>
+                  An object with <code>get(): value</code>,
+                  <code>set(valueOrUpdater): undefined</code>, and
+                  <code>subscribe(listener): unsubscribe function</code>.
+                </dd>
+                <dt>Notes</dt>
+                <dd>
+                  <code>set()</code> calls subscribers synchronously for every
+                  update. <code>subscribe()</code> does not invoke its listener
+                  immediately.
+                </dd>
+              </dl>
+            </article>
+
+            <article class="api-entry" id="api-create-router">
+              <h3><code>createRouter()</code></h3>
+              <p>
+                <strong>Purpose.</strong> Create a router based on the URL hash.
+              </p>
+              <pre
+                data-language="JavaScript"
+              ><code>const router = createRouter();
+router.register("/").register("/about");
+router.subscribe((path) =&gt; console.log("Route:", path));
+router.start();
+router.navigate("/about");</code></pre>
+              <dl>
+                <dt>Parameters</dt>
+                <dd>None.</dd>
+                <dt>Returns</dt>
+                <dd>
+                  A router with <code>register(path): router</code>,
+                  <code>navigate(path): undefined</code>,
+                  <code>start(): undefined</code>,
+                  <code>getCurrentRoute(): string</code>,
+                  <code>getCurrentView(renderRoute): view result</code>, and
+                  <code>subscribe(listener): unsubscribe function</code>.
+                </dd>
+                <dt>Notes</dt>
+                <dd>
+                  Register paths before starting.
+                  <code>getCurrentView()</code> returns the view callback’s
+                  result, or a built-in 404 node for unknown routes. Refresh and
+                  browser history use the hash.
+                </dd>
+              </dl>
+            </article>
+
+            <article class="api-entry" id="api-on">
+              <h3><code>on(target, eventName, handler, options?)</code></h3>
+              <p>
+                <strong>Purpose.</strong> Register a native event listener and
+                receive its cleanup function.
+              </p>
+              <pre
+                data-language="JavaScript"
+              ><code>const stop = on(window, "keydown", (event) =&gt; {
+  if (event.key === "Escape") console.log("Closed");
+});
+stop();</code></pre>
+              <dl>
+                <dt>Parameters</dt>
+                <dd>
+                  <code>target</code> (EventTarget): object with add/remove
+                  listener methods. <code>eventName</code> (nonempty string):
+                  native event name. <code>handler</code> (function): receives
+                  the native event. <code>options</code> (optional): passed to
+                  browser listener methods.
+                </dd>
+                <dt>Returns</dt>
+                <dd>An idempotent function that removes the listener.</dd>
+                <dt>Notes</dt>
+                <dd>
+                  Use <code>on…</code> attributes for events on HHT.js elements.
+                  <code>on()</code> is useful for global or outside-tree
+                  listeners.
+                </dd>
+              </dl>
+            </article>
+          </section>
+
+          <section class="doc-section" id="framework-concepts">
+            <div class="section-kicker">17 / Concepts</div>
+            <h2>Framework concepts</h2>
+            <div class="concept-grid">
+              <div>
+                <span class="concept-index">01</span>
+                <h3>DOM abstraction</h3>
+                <p>
+                  <code>createElement()</code> makes a description of UI.
+                  <code>render()</code> translates it into real DOM and compares
+                  later descriptions.
+                </p>
+              </div>
+              <div>
+                <span class="concept-index">02</span>
+                <h3>State</h3>
+                <p>
+                  <code>state()</code> stores values. Your view reads with
+                  <code>get()</code>; event handlers write with
+                  <code>set()</code>.
+                </p>
+              </div>
+              <div>
+                <span class="concept-index">03</span>
+                <h3>Events</h3>
+                <p>
+                  <code>onClick</code> and similar attributes give the framework
+                  a callback to run when a native event fires.
+                </p>
+              </div>
+              <div>
+                <span class="concept-index">04</span>
+                <h3>Routing</h3>
+                <p>
+                  A router reads <code>location.hash</code>, tracks the current
+                  path, and asks your route view function for a page.
+                </p>
+              </div>
+            </div>
+            <p>
+              These pieces remain explicit: you decide which state and route
+              changes call your render function. That wiring is visible in the
+              counter and routing examples.
+            </p>
+          </section>
+
+          <section class="doc-section" id="inversion-of-control">
+            <div class="section-kicker">18 / Concepts</div>
+            <h2>Inversion of control</h2>
+            <p>
+              With a library, your application calls a helper whenever it needs
+              one. A framework also calls your application code at the right
+              moment. HHT.js does this when an event fires, a state subscriber
+              is notified, a hash route changes, or a ref becomes available.
+            </p>
+            <div class="ioc-card">
+              <div>
+                <span>01</span><strong>You provide a callback</strong
+                ><code>count.subscribe(renderApp)</code>
+              </div>
+              <span class="ioc-arrow" aria-hidden="true">↓</span>
+              <div>
+                <span>02</span><strong>The framework stores it</strong
+                ><code>state.set(nextValue)</code>
+              </div>
+              <span class="ioc-arrow" aria-hidden="true">↓</span>
+              <div>
+                <span>03</span><strong>The framework calls you</strong
+                ><code>renderApp()</code>
+              </div>
+            </div>
+            <p>
+              HHT.js keeps this relationship small and visible. You still choose
+              the callbacks and connect them; the framework handles when to
+              invoke them and how to update its rendered DOM.
+            </p>
+          </section>
+
+          <section class="doc-section" id="troubleshooting">
+            <div class="section-kicker">19 / Help</div>
+            <h2>Common mistakes &amp; troubleshooting</h2>
+            <div class="trouble-list">
+              <details>
+                <summary>My page is blank after creating state.</summary>
+                <p>
+                  <code>state.set()</code> does not render automatically.
+                  Subscribe your render function and call it once for the
+                  initial view:
+                  <code>store.subscribe(renderApp); renderApp();</code>
+                </p>
+              </details>
+              <details>
+                <summary>HHT.js says the mount target was not found.</summary>
+                <p>
+                  Check that your selector matches an element already in the
+                  page. Load the app module after the target exists or place the
+                  module script in the document head with
+                  <code>type="module"</code>.
+                </p>
+              </details>
+              <details>
+                <summary>My nested children or list do not appear.</summary>
+                <p>
+                  Pass all children as the third argument, usually an array.
+                  <code>createElement("div", {}, [first, second])</code> works;
+                  separate fourth and fifth child arguments are ignored.
+                </p>
+              </details>
+              <details>
+                <summary>My click handler never runs.</summary>
+                <p>
+                  Use a native event spelling such as <code>onClick</code> or
+                  <code>onDblclick</code>, and pass a function.
+                  <code>onClick: save()</code> runs <code>save</code> during
+                  view creation; use <code>onClick: save</code> or an arrow
+                  function.
+                </p>
+              </details>
+              <details>
+                <summary>My route shows a 404 page.</summary>
+                <p>
+                  Register the exact path before rendering it. HHT.js routes
+                  live in the hash, for example <code>#/about</code>, and route
+                  matching is case-sensitive.
+                </p>
+              </details>
+              <details>
+                <summary>Can I use functions as reactive children?</summary>
+                <p>
+                  No. Use <code>state.subscribe(renderApp)</code> and let the
+                  view read the latest state during each render. Function
+                  children are not valid renderable nodes.
+                </p>
+              </details>
+              <details>
+                <summary>
+                  Why does <code>mount()</code> not update my app?
+                </summary>
+                <p>
+                  <code>mount()</code> only appends once. Use
+                  <code>render()</code> for the initial view and subsequent
+                  updates.
+                </p>
+              </details>
+            </div>
+            <div class="callout callout-note">
+              <span class="callout-symbol" aria-hidden="true">↗</span>
+              <div>
+                <strong>Need the longer manual?</strong>
+                <p>
+                  The repository also keeps its full
+                  <a href="/docs/documentation.md">Markdown documentation</a>,
+                  including deeper notes on keys, refs, forms, and edge cases.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <footer class="page-footer">
+            <span class="footer-mark">H·</span>
+            <div>
+              <strong>Built to be understood.</strong
+              ><span
+                >HHT.js documentation · Based on the current public API</span
+              >
+            </div>
+            <a href="#introduction">Back to top ↑</a>
+          </footer>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

@@ -16,6 +16,8 @@ function matches(element, selector) {
 function createDocument(root) {
   const document = {
     activeElement: null,
+    // Only what the app touches: the theme lives in `dataset.theme`.
+    documentElement: { dataset: {} },
     createElement(tagName) {
       const element = new EventTarget();
       element.nodeType = 1;
@@ -132,6 +134,7 @@ export function createStorage(initial = {}) {
 // Installs the fake `document` and `window` and mounts the app at `hash`.
 // Each test file runs in its own process, so state starts fresh per file.
 // `storage` is the page's localStorage; pass one to start with saved todos.
+// `prefersDark` is the system colour-scheme setting.
 //
 // `reload()` simulates a browser refresh: it starts a new copy of todo/app.js
 // (new router, reads the hash again, loads todos from the same storage) on a
@@ -140,6 +143,7 @@ export function createStorage(initial = {}) {
 export async function mountTodoApp({
   hash = "#/",
   storage = createStorage(),
+  prefersDark = false,
 } = {}) {
   const originalDocument = globalThis.document;
   const originalWindow = globalThis.window;
@@ -170,6 +174,9 @@ export async function mountTodoApp({
     globalThis.window = {
       location: { hash: startHash },
       localStorage: storage,
+      matchMedia: (query) => ({
+        matches: prefersDark && query === "(prefers-color-scheme: dark)",
+      }),
       addEventListener(type, listener) {
         if (type === "hashchange") hashListeners.push(listener);
       },
@@ -185,6 +192,8 @@ export async function mountTodoApp({
 
   return {
     page: () => root.childNodes[0],
+    // The theme the stylesheet sees: `data-theme` on <html>.
+    theme: () => document.documentElement.dataset.theme,
     storage,
     // Same as clicking a link: the hash changes, then `hashchange` fires.
     navigate(nextHash) {

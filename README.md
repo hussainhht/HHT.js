@@ -54,7 +54,7 @@ count.subscribe(renderApp); // re-render whenever the state changes
 renderApp();                // first render
 ```
 
-HHT.js uses **named exports only**, all from `framework/index.js`. There is no default export and no `hht` object. `state.set()` does not re-render on its own: you subscribe your render function, as above. The documentation explains why.
+HHT.js uses **named exports only**, all from `framework/index.js`. `state.set()` does not re-render on its own: you subscribe your render function, as above. The documentation explains why.
 
 ## Project structure
 
@@ -81,8 +81,7 @@ mini-framework/
     ├── documentation.md          full framework manual
     ├── documentation-audit.md    documentation audit report
     ├── project.md                original project brief
-    ├── TodoMVC-Study.md          TodoMVC behaviour notes
-    └── Design.md                 historical early design (not the current API)
+    └── TodoMVC-Study.md          TodoMVC behaviour notes
 ```
 
 ## TodoMVC
