@@ -44,7 +44,9 @@ export function on(target, eventName, handler, options) {
     typeof target.addEventListener !== "function" ||
     typeof target.removeEventListener !== "function"
   ) {
-    throw new Error("HHT.js: Event target must support addEventListener() and removeEventListener().");
+    throw new Error(
+      "HHT.js: Event target must support addEventListener() and removeEventListener().",
+    );
   }
   if (typeof eventName !== "string" || eventName === "") {
     throw new Error("HHT.js: Event name must be a non-empty string.");

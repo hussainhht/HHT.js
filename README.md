@@ -4,7 +4,7 @@
 
 <h1 align="center">HHT.js</h1>
 
-HHT.js is a small JavaScript framework for building web pages, written from scratch with no dependencies. You describe the page with plain JavaScript objects; HHT.js creates the real elements and, when your state changes, updates only the parts of the page that differ.
+ٍHHT.js is a small JavaScript fraٍmework for building web pages, written from scratch with no dependencies. You describe the page with plain JavaScript objects; HHT.js creates the real elements and, when your state changes, updates only the parts of the page that differ.
 
 The repository also contains a complete [TodoMVC](https://todomvc.com/) application built with HHT.js.
 
